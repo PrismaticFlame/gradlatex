@@ -1,0 +1,231 @@
+% Personal style file for Christopher Williams
+% Save as cwilliams-standard.sty
+
+\ProvidesPackage{cwilliams-standard}
+
+% Geometry and basic packages
+\RequirePackage[margin=0.75in]{geometry}
+\setlength{\headheight}{14.5pt}
+\RequirePackage{graphicx}
+
+% Code display packages
+\RequirePackage{listings}
+\RequirePackage{xcolor}
+\RequirePackage{colortbl}
+\RequirePackage{multicol}
+\RequirePackage{float}
+
+% \RequirePackage{emoji}
+\RequirePackage{soul}
+\RequirePackage{ulem}
+
+% Define colors for syntax highlighting
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Configure Python code style
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Formatting packages
+\RequirePackage{amsmath, amssymb, amsthm}
+\RequirePackage{fancyhdr}
+\RequirePackage{enumitem}
+\RequirePackage{titlesec}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{pdflscape}
+\RequirePackage[colorlinks=true, linkcolor=blue, urlcolor=cyan, citecolor=blue]{hyperref}
+% \RequirePackage{subfigure}
+\RequirePackage{subcaption}
+\RequirePackage{lipsum}
+
+% Alternative font packages (default font remains unchanged)
+\RequirePackage{helvet}     % Helvetica (sans-serif)
+\RequirePackage{avant}      % Avant Garde (sans-serif)
+
+% Font switching commands
+\newcommand{\helv}[1]{{\fontfamily{phv}\selectfont #1}}           % Helvetica
+\newcommand{\avant}[1]{{\fontfamily{pag}\selectfont #1}}          % Avant Garde
+
+% Define emphasis commands with different fonts/styles
+% \newcommand{\important}[1]{\helv{\textbf{\large\textcolor{red}{#1}}}}     % Important in Helvetica
+% \newcommand{\highlight}[1]{\avant{\textbf{\textcolor{blue}{#1}}}}         % Highlight in Avant Garde
+\newcommand{\note}[1]{\textit{\textcolor{gray}{#1}}}                      % Notes stay in default font (removed due to conflict with tcolorbox)
+\newcommand{\emphasis}[1]{\textbf{\underline{#1}}}                        % Emphasis in default font
+\newcommand{\code}[1]{\texttt{\textcolor{purple}{#1}}}                    % Code stays monospace
+\newcommand{\warning}[1]{\helv{\textbf{\textcolor{orange}{⚠ #1}}}}       % Warnings in Helvetica
+\newcommand{\success}[1]{\avant{\textbf{\textcolor{green}{✓ #1}}}}
+
+\RequirePackage[most]{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\RequirePackage{pdflscape}
+\RequirePackage{afterpage}
+\RequirePackage{tikz, pgfplots}
+\usetikzlibrary{backgrounds}
+\pgfplotsset{compat=1.18}
+
+% ===== CORRECTED AUTHOR HANDLING SYSTEM =====
+
+% Storage for authors
+\newcommand{\@authorlist}{Christopher Williams} % Default full list
+\newcommand{\@headerauthor}{Christopher Williams} % Default header
+
+% CORRECTED: Command to set unlimited authors
+\newcommand{\setauthors}[1]{%
+    \renewcommand{\@authorlist}{#1}%
+    \@parseFirstAuthor{#1}%
+}
+
+% CORRECTED: Parse first author for header
+\newcommand{\@parseFirstAuthor}[1]{%
+    % Check if there's a comma (multiple authors)
+    \expandafter\@checkcomma\expandafter{#1}%
+}
+
+\newcommand{\@checkcomma}[1]{%
+    \in@{,}{#1}%
+    \ifin@
+        % Multiple authors - extract first + add "et al."
+        \expandafter\@extractfirst#1,\@nil
+        \expandafter\renewcommand\expandafter{\expandafter\@headerauthor\expandafter}{\@tempfirst\ et al.}%
+    \else
+        % Single author - use as is
+        \renewcommand{\@headerauthor}{#1}%
+    \fi
+}
+
+% Extract first author before comma
+\def\@extractfirst#1,#2\@nil{%
+    \def\@tempfirst{#1}%
+}
+
+% Alternative command for custom header control
+\newcommand{\setauthorsandheader}[2]{%
+    \renewcommand{\@authorlist}{#1}%
+    \renewcommand{\@headerauthor}{#2}%
+}
+
+% NEW: Command to manually set header author display
+% Usage: \setheaderauthors{Custom Header Text}
+\newcommand{\setheaderauthors}[1]{%
+    \renewcommand{\@headerauthor}{#1}%
+}
+
+% NEW: Command to set authors with custom header in one go
+% Usage: \setauthorswithheader{Full Author List}{Custom Header}
+\newcommand{\setauthorswithheader}[2]{%
+    \renewcommand{\@authorlist}{#1}%
+    \renewcommand{\@headerauthor}{#2}%
+}
+
+% Set up header and footer using the author variables
+\fancyhf{}
+\fancyhead[L]{\@headerauthor}
+\fancyhead[C]{} % Will be set by \setclass command
+\fancyhead[R]{\today}
+\fancyfoot[C]{\thepage}
+\pagestyle{fancy}
+
+% Command to set the class name in header
+\newcommand{\setclass}[1]{
+    \fancyhead[C]{#1}
+}
+
+% CORRECTED: Command to set the document title
+\newcommand{\settitle}[1]{
+    \title{#1}
+    \author{\@authorlist}
+    \date{\today}
+}
+
+% CORRECTED: Title page that uses stored author list
+\newcommand{\maketitlepage}{
+    \begin{center}
+        {\Large \textbf{\@title}} \\
+        \vspace{0.3cm}
+        {\large \@authorlist} \\
+        \vspace{0.2cm}
+        \today
+    \end{center}
+}
+
+% Alternative title page with each author on separate line
+\newcommand{\maketitlepagefancy}{
+    \begin{center}
+        {\Large \textbf{\@title}} \\
+        \vspace{0.4cm}
+        \begin{tabular}{c}
+            \@formatauthors{\@authorlist}
+        \end{tabular} \\
+        \vspace{0.3cm}
+        \today
+    \end{center}
+}
+
+% Helper command to format authors (each on new line)
+\newcommand{\@formatauthors}[1]{%
+    \@formatauthorsloop{#1}%
+}
+
+\newcommand{\@formatauthorsloop}[1]{%
+    \@formatauthorsaux#1,\@endlist,%
+}
+
+\def\@formatauthorsaux#1,#2\@endlist{%
+    #1%
+    \ifx\@endlist#2\@endlist
+        % We've reached the end
+    \else
+        \\% New line for next author
+        \@formatauthorsaux#2\@endlist
+    \fi
+}
+
+% Command for team project setup (convenience wrapper)
+\newcommand{\setupteamproject}[3]{%
+    \settitle{#1}%
+    \setauthors{#2}%
+    \setclass{#3}%
+}
+
+% Legacy compatibility
+\newcommand{\setauthor}[1]{%
+    \setauthors{#1}%
+}
+
+% Course shortcuts
+\newcommand{\MLONE}{CS5805 - Machine Learning 1}
+\newcommand{\URBCOMP}{CS5834 - Intro to Urban Computing}
+\newcommand{\IPD}{CS5925 - Integrated Project Design}
+
+% Define callout box styles
+\newtcolorbox{callout}[2][]{breakable,sharp corners, skin=enhancedmiddle jigsaw,parbox=false,
+boxrule=0mm,leftrule=2mm,boxsep=0mm,arc=0mm,outer arc=0mm,attach title to upper,
+after title={.\ }, coltitle=black,colback=gray!10,colframe=black, title={#2},
+fonttitle=\bfseries,#1}
+
+% Additional callout variants
+\newtcolorbox{important}[2][]{breakable,sharp corners, skin=enhancedmiddle jigsaw,parbox=false,
+boxrule=0mm,leftrule=3mm,boxsep=0mm,arc=0mm,outer arc=0mm,attach title to upper,
+after title={.\ }, coltitle=red!80!black,colback=red!5,colframe=red!80!black, title={#2},
+fonttitle=\bfseries,#1}
