@@ -10,19 +10,74 @@
 
 \section{Regularization Method}
 
+For better interpretability, it is best to use $L_1$ Regularization, or Lasso Regression. It may depend in some cases, 
+mainly if all features are important or if only some features are important. However, overall, $L_1$ will provide a more interpretable model as it
+eliminates features (performs feature selection) from the model whereas $L_2$ or Ride Regression does not do feature elimination, but only brings less important
+features very close to 0.
+
 \section{Policing with Linear Regression or Decision Trees}
 
 \subsection{Feature Emphasis}
 
+A decision tree may overemphasize a few discrete features because it splits the feature space by
+selecting variables that give the greatest reduction in impurity. Discrete features sometimes have
+high-information splits, which would cause a decision tree to prioritize them early and assign High
+importance. Logistic regression models the log-odds of the outcome as a linear combination of all
+predictors, distributing influence more smoothly across correlated variables rather than
+forming hard thresholds. Consequently, logistic regression tends to represent feature effects
+more proportionally.
+
 \subsection{Correlated Feature Emphasis}
 
+Logistic regression models the log-odds of an outcome as a linear combination of all predictors, allowing
+it to capture the combined influence of correlated social factors through their additive effects. This
+creates a smoother, proportional representation of each variable's contribution rather than discrete thresholds
+like in the decision tree. But, on the other hand, logistic regression assumes no multicollinearity because
+that can obscure the unique contributions of correlated variables (we don't know which feature is truly responsibile
+for the effect). This means that complex social interdependencies, like income, unemployment, and
+population density, get underrepresented or obfuscated. The underlying societal effects are represented,
+but they cannot be decidedly attributed to any one feature.
+
 \subsection{Nonlinear Interaction Model}
+
+To best capture nonlinear interactions *and* remain interpretable, a decision tree model is the best approach.
+Decision trees naturally represent nonlinear relationships and feature interactions through highly-informative splits
+that can be visualized and explained to potential policymakers. If we could also use a Random Forest this could improve
+predictive accuracy and stability by averaging across multiple trees, but this does come at the cost of
+interpretability because the individual splits aren't transparent after being averaged across multiple trees. So,
+we could use a shallow or pruned decision tree to provide the best balance between capturing nonlinear structure and
+remaining understandable for urban policy decisions.
 
 \section{HVAC Scheduling Model}
 
 \subsection{Task Difficulty of Prediction}
 
+There are a myriad of difficulties with this task. 
+
+\begin{itemize}
+    \item The available data from the sensors may not accurately capture the full variability of occupancy patterns. A single week of training may capture untypical behavior (a holiday,
+    so less overall occupancy, or a deadline week, so abnormally high occupancy), which would lead to poor generalizability.
+    \item Sensor readings such as temperature, CO$_2$, and sound levels could be influenced by factors unrelated to occupancy of the room
+    like HVAC cycles, equipment noise, outside-room noise, and environmental fluctuations (Winter, Summer, natural disasters or weather).
+    \item Sensor malfunction or drift could further the amount of noise that is captured.
+    \item Stationary sensors may not capture a fully accurate reading depending on their position in the room causing either high or low readings.
+    \item Sensors might not record together, causing temporal mismatch of features.
+    \item If recording across an entire week, all day, the model may lean more towards vacant than occupied as offices are (likely)
+    unoccupied for a majority of a day. 
+    \item Rooms are more than likely not perfectly sealed off from one another, so noise, temperature, Wi-Fi access, and even CO$_2$ could
+    leak into surrounding rooms.
+    \item Office workers could potentially carry multiple devices so one person could connect to a single Wi-Fi point but would because
+    interpreted as multiple people connecting.
+    \item Without enough data, training on one week of data may cause the model to overfit to specific conditions and times which would
+    would failing on new data.
+\end{itemize}
+
 \subsection{Low Training, High Testing}
+
+Simplifying the model by pruning, regularizing, or limiting depth/number of coefficients reduces the complexity and prevents it from fitting
+noise in the training data. As a result, training accuracy decreases slightly, but test accuracy improves because the model
+generalizes better to unseen data. The model now has slightly higher bias but significantly lower variance, reducing overfitting and
+improving overall predictive performance on new data.
 
 \section{Metro Interstate Traffic Volume}
 
