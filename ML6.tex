@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+\usepackage{cwilliams-standard}
+
+\setclass{\MLONE}
+\settitle{Homework 6}
+
+\begin{document}
+
+\maketitlepage
+
+\section{EDA}
+
+
+\section*{Feature Selection \& Prediction}
+
+\section{Backward Stepwise Regression}
+
+\section{PCA}
+
+\section{Random Forest Analysis}
+
+\section{Table of Metrics}
+
+\section{Prediction Interval}
+
+\section{Polynominal Regression and Grid Search}
+
+\section{Simple Linear Regression}
+
+In a simple linear regression with n observations:
+\begin{equation}
+    y_i \approx \hat{\beta}_0 + \hat{\beta}_1 x_i
+\end{equation}
+
+Prove the following:
+\begin{align}
+    \hat{\beta}_1 &= \frac{\sum_{i=1}^{n} (x_i - \bar{x}) (y_i - \bar{y})}{\sum_{i=1}^{n} (x_i - \bar{x})^2} \\
+    \hat{\beta}_0 &= \bar{y} - \hat{\beta}_1 \bar{x}
+\end{align}
+
+where $\bar{x} = \frac{1}{n} \sum_{i=1}^{n}x_i$ and $\bar{y} = \frac{1}{n}\sum_{i=1}^{n}y_i$ are the sample mean.
+
+\end{document}

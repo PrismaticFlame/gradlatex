@@ -1,0 +1,107 @@
+\documentclass[12pt]{article}
+\usepackage{cwilliams-standard}
+
+\setclass{\IPD}
+\settitle{Homework 3}
+
+\begin{document}
+
+\maketitlepage
+
+\section{Refinement}
+
+From the question, I am interpretting the question to mean that we need to
+track scores from previous games and continue to store them for the player to view
+at later times, not single game scores viewable at the end of that game.
+
+\textbf{Initial Feature Creation}
+\begin{itemize}
+    \item Scores need to be calculated at the end of the game + Scores must be stored in a database
+    \item Scores must be linked to the player/user
+    \item Limit number of scores stored? Prevent an overflow of data by active players
+    \item Type of card game can change the score that is stored
+    \item System stores game results with player details
+\end{itemize}
+
+\textbf{First Refinement}
+\begin{itemize}
+    \item Scores calculated at the end of the game must be saved
+    \item Scores need to be saved in a database, linked to the respective players
+    \item Scores will be viewable after games and show their score and their opponents scores
+    \item Scores will be shown in increments of 20 on pages and will be shown when accessed instead of loading all scores at once.
+    \item Data model: game session contains data, game type, players, scores, winner
+    \item Users can view paginated history (20 per page)
+    \item Store last 1 year of games per user
+    \item Users can filter by date range or game type
+\end{itemize}
+
+\textbf{Second Refinement}
+\begin{lstlisting}[language=Python]
+    class match
+        array details[score]
+        int match_number
+        def save_to_database
+            send to database
+            store in database
+            key is match_number, value is details array
+        def return_match
+            return details array
+
+    match.return_match(x)
+\end{lstlisting}
+
+\textbf{Third Refinement}
+
+Need to entirely overhaul second refinement. Seems I entirely forgot to include... any of my specifications. 
+Also, will be using SQL as database logic, but as psuedocode. And I am going to ditch the "match" idea instead for
+"GameResult" which is more descriptive and more comprehensive.
+
+\begin{lstlisting}[language=Python]
+    class GameResult:
+        game_id(unique identifier)
+        timestamp
+        game_type (string)
+        players[] (array of player objects)
+        scores[] (array parallel to players)
+        winner_id
+    
+    class ScoreTracker:
+        def save_game (game_result):
+            validate game_result
+            assign game_id = generate_unique_id()
+            assign timestamp = current_time()
+            database.insert(game_result)
+            if not validate(game_result):
+                return error
+            return game_id
+        def get_user_history(user_id, page_number, page_size=20, game_type=None, date_range=None):
+            offset = (page_number - 1) * page_size
+            results = database.query(
+                WHERE user_id IN players
+                AND (game_type = game_type OR game_type IS NULL)
+                AND (timestamp BETWEEN date_range OR date_range IS NULL)
+                ORDER BY timestamp DESC
+                LIMIT page_size
+                OFFSET offset
+            )
+            return results
+        def cleanup_old_games():
+            cutoff_date = current_date - 1_year
+            database.delete(WHERE timestamp < cutoff_date)
+\end{lstlisting}
+
+\textbf{Difficulties}:
+\begin{itemize}
+    \item Must handle high data volume (limit retention period)
+    \item Performance: don't load high amounts of data (pagination is necessary)
+\end{itemize}
+
+\section{Office Generation Modules}
+
+\section{Important Design Modeling Characteristic}
+
+\section{Old vs. New Requirement Capturing}
+
+\section{"More Than Code"}
+
+\end{document}
