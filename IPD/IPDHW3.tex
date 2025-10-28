@@ -53,8 +53,7 @@ at later times, not single game scores viewable at the end of that game.
 \textbf{Third Refinement}
 
 Need to entirely overhaul second refinement. Seems I entirely forgot to include... any of my specifications. 
-Also, will be using SQL as database logic, but as psuedocode. And I am going to ditch the "match" idea instead for
-"GameResult" which is more descriptive and more comprehensive.
+I am also going to ditch the "match" idea instead for "GameResult" which is more descriptive and more comprehensive.
 
 \begin{lstlisting}[language=Python]
     class GameResult:
@@ -98,10 +97,37 @@ Also, will be using SQL as database logic, but as psuedocode. And I am going to 
 
 \section{Office Generation Modules}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/HW3.pdf}
+    \caption{Modules for Office Generator}
+    \label{fig:officegenerator}
+\end{figure}
+
 \section{Important Design Modeling Characteristic}
 
+I believe of the 10 design characteristics we discussed, the \textbf{cohesion} is the most important. High cohesion ensures that
+each module has a single, well defined purpose with closely related functionalities grouped with it. This particular principle is
+most important because it directly affects many other principles: high cohesion is easier to understand (abstraction),
+easier to maintain (modularity), and better at hiding implementation details (encapsulation).
 \section{Old vs. New Requirement Capturing}
 
+The older version of requirement capturing placed a heavy emphasis on the customer being the source of the issues, where the customer creates requirements 
+or boundaries that don't make sense within the context of the project because they lack understanding about the topic. In contrast, the new version offers philosophical statements like "we don't understand everything about the world," 
+which, while universally true, provides no actionable guidance on identifying which stakeholder has the problem or how to prevent common requirement traps.
+The older model describes when customers are the root of ambigious or vague requirements that are a common trap which lead teams to fall into metaphorical potholes and having to go back to the drawing board. 
+
 \section{"More Than Code"}
+
+I believe the model presented by Ramin et al. represents a strong improvement over previous contribution models because it acknowledges
+non-technical contributions that often go overlooked. However, the model has limitations as well. By only basing their work off of the 2017 Scrum Guide,
+the authors only present a "vanilla Scrum", which likely misses some real world adaptations that teams like to make to the Scrum format. Also,
+some contributions like 'Product Backlog Maintenance' get addressed organically through the processes of development, reducing the distinctiveness of the model. 
+
+The \textit{Team Contribution Analysis} use case is very effective because, using Table 2's contribution list, teams can identify "project
+contributions that have been previously overlooked [Ramin et al.]." This helps to alleviate a problem that many teams face which is that developers spend a minority
+of their time actually coding/programming. This leaves many essential and necessary contributions unrecognized like backlog refinement and impediment removal.
+Also, it directly supports the Scrum ideology of transparency and self-organization because team members can communicate and air misunderstandings
+easier which creates opportunities for clarification instead of allowing confusion and grievances to fester.
 
 \end{document}
