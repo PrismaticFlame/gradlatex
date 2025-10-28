@@ -1,0 +1,306 @@
+\documentclass[12pt]{article}
+\usepackage{cwilliams-standard}
+
+\setclass{IPD}
+\settitle{Project Management Document}
+
+\begin{document}
+
+\maketitlepage
+
+\vspace{0.5cm}
+
+\section{Objective \& Scope}
+
+\textbf{Goal.} Train and evaluate a soft-input transformer decoder for a 3×3 rotated surface code entirely in simulation—no Sycamore, no fitted DEM from hardware.
+
+\textbf{You will produce:}
+\begin{enumerate}
+    \item A hard-input MWPM baseline (PyMatching).
+    \item A soft-input transformer (based on TransformerQEC) trained with:
+    \begin{itemize}
+        \item \textbf{Pretraining:} circuit-level depolarizing noise (SI1000-style via Stim).
+        \item \textbf{Fine-tuning:} analog (Gaussian) readout surrogates that mimic odd/even round bias.
+    \end{itemize}
+    \item LER curves vs physical error rate, with confidence intervals.
+\end{enumerate}
+
+\section{Modules at a Glance}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lllp{5cm}@{}}
+\toprule
+\textbf{Module} & \textbf{Description} & \textbf{Open Source} & \textbf{Notes} \\
+\midrule
+Baseline Decoder & Classical MWPM for benchmarking &  PyMatching & Hard (0/1) input; fast and stable \\
+Error Simulator & Pauli + non-Pauli noise &  Stim / Qiskit & Pauli via Stim, crosstalk/leakage via Qiskit NoiseModel \\
+Transformer Decoder & Soft-input neural decoder &  TransformerQEC & Add spatial/temporal/analog encodings \\
+Training Pipeline & Pretrain → Fine-tune &  & Fully reproducible with software data \\
+\bottomrule
+\end{tabular}
+\caption{Module overview for AlphaQubit reproduction}
+\end{table}
+
+\textbf{Optional datasets:} you can also draw on public releases (e.g., Zenodo record 6804040) as supplemental training/eval sources when compatible with your formats.
+
+\section{Baseline Decoders}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}lllllp{3cm}@{}}
+\toprule
+\textbf{Decoder} & \textbf{Input} & \textbf{Open Source} & \textbf{Pros} & \textbf{Cons} & \textbf{Decision} \\
+\midrule
+PyMatching & Hard (0/1 syndrome) & Yes  & Fast, standard MWPM & Drops readout confidence & Use as main baseline \\
+MWPM-Corr & Hard (0/1 + correlation) & No & Models spatio-temporal corr. & Not public & Skip \\
+MWPM-BP & Soft (prob.) & No & Soft-input support & Not public & Skip \\
+Crumble & Hard/Soft (detector analysis) & Yes & Great for understanding DEM & Not in paper & Optional for analysis only \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of baseline decoders}
+\end{table}
+
+If you want a soft-input MWPM proxy, approximate by temperature-scaled log-likelihood weights plugged into edge costs—but keep it secondary to PyMatching.
+
+\section{Error Models \& Simulation}
+
+\subsection{Pauli (Stim)}
+
+\textbf{Channel:} independent X/Y/Z or depolarizing.
+
+\textbf{Circuit:}
+\begin{lstlisting}[language=Python]
+import stim
+circuit = stim.Circuit.generated(
+    "surface_code:rotated_memory_z",
+    distance=3, rounds=R, noise=p  # p ~ 1e-4...1e-2 across a sweep
+)
+dem = circuit.detector_error_model()
+\end{lstlisting}
+
+\textbf{Use:} Generate training/eval DEM samples and ground-truth logical outcomes.
+
+\subsection{Beyond-Pauli (Qiskit)}
+
+\begin{itemize}
+    \item \textbf{Crosstalk:} correlated two-qubit errors on adjacent data/ancilla pairs.
+    \item \textbf{Leakage:} amplitude leakage channels on selected qubits (data or measure).
+\end{itemize}
+
+\textbf{Use:} Stress-test generalization; don't overfit to Pauli-only worlds.
+
+\subsection{Analog Readout (Soft Input)}
+
+\textbf{Construction:} For each detector bit $d \in \{0,1\}$, sample an analog readout
+\begin{equation}
+r \sim \mathcal{N}(\mu_d, \sigma_d^2),
+\end{equation}
+with odd/even round bias:
+\begin{equation}
+\mu_0 = +m_0, \quad \mu_1 = -m_1;
+\end{equation}
+flip signs on even rounds to mimic bias drift.
+
+Keep $\sigma_d$ modest (e.g., 0.5--1.0) and sweep $m_0, m_1$ during ablations.
+
+\textbf{Where:} Attach $r$ to each detector/time index (see §\ref{sec:data_rep}).
+
+\section{Training Pipeline (AlphaQubit-Style without Hardware)}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Phase} & \textbf{Purpose} & \textbf{Data Source} & \textbf{Hardware} \\
+\midrule
+Pretraining & Learn generic circuit-level Pauli structure & SI1000-style depolarizing via Stim &  \\
+Fine-tuning & Exploit soft analog features (readout bias) & Gaussian readouts with odd/even drift &  \\
+\bottomrule
+\end{tabular}
+\caption{Training pipeline phases}
+\end{table}
+
+\textbf{Why this works:} AlphaQubit's fitted/weighted DEMs need calibration. We replace that with SI1000-style synthetic data for pretraining and software-only analog for fine-tuning. No Sycamore required.
+
+\section{Data Representation (Transformer Input)}
+\label{sec:data_rep}
+
+\textbf{Per token:} one detector at one round.
+
+\textbf{Features per token:}
+\begin{enumerate}
+    \item \textbf{Analog readout} $r$ or binarized bit $d$ (train both; fine-tune on $r$).
+    \begin{itemize}
+        \item Map with \texttt{Linear(1, d\_model)}.
+    \end{itemize}
+    
+    \item \textbf{Spatial encoding} (stabilizer position / detector id).
+    \begin{itemize}
+        \item \texttt{nn.Embedding(num\_detectors, d\_model)} or sinusoidal 2D.
+    \end{itemize}
+    
+    \item \textbf{Temporal encoding} (round index $t$).
+    \begin{itemize}
+        \item \texttt{nn.Embedding(num\_rounds, d\_model)}.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Final shape:} \texttt{(batch, N\_detectors × T, d\_model)}.
+
+\section{Model \& Loss}
+
+\textbf{Backbone:} Transformer encoder/decoder stacks (start from TransformerQEC).
+
+\textbf{Head:} Linear → Sigmoid for $P(\text{logical error}) \in [0,1]$.
+
+\textbf{Loss:} Binary Cross Entropy. Prefer \texttt{BCEWithLogitsLoss} on logits $z$:
+\begin{equation}
+\mathcal{L} = \frac{1}{N} \sum_i \left( \max(z_i, 0) - z_i y_i + \log(1 + e^{-|z_i|}) \right)
+\end{equation}
+
+\textbf{Class imbalance:} set \texttt{pos\_weight} or use focal loss if $y=1$ is rare.
+
+\textbf{Training tips:} AdamW(lr=1e-4), dropout 0.1, cosine LR decay optional, gradient clip (1.0).
+
+\section{Baseline \& Parity}
+
+\subsection{PyMatching (Hard Input)}
+
+From Stim DEM, produce syndrome bits and run MWPM:
+\begin{lstlisting}[language=Python]
+import pymatching as pm
+# Build matching from DEM graph (convertors exist in ecosystem)
+# m = pm.Matching(H)  # parity-check style
+# e_hat = m.decode(syndrome_bits)
+# logical = check_logical(e_hat)
+\end{lstlisting}
+
+Report LER vs $p$ with 95\% CI (bootstrap over shots).
+
+\subsection{Soft-Input Proxy (Optional)}
+
+Convert analog scores $r$ to likelihoods via a Gaussian model; set edge costs in MWPM accordingly. Use only for sanity checks; main story is the transformer.
+
+\section{Evaluation Protocol}
+
+\textbf{Curves:} LER vs physical error rate $p \in \{10^{-4}, \ldots, 10^{-2}\}$.
+
+\textbf{Splits:} Pretrain on Pauli depolarizing; fine-tune/eval on analog data with odd/even bias not seen in pretrain.
+
+\textbf{Metrics:}
+\begin{itemize}
+    \item \textbf{Primary:} LER (mean ± 95\% bootstrap CI).
+    \item \textbf{Secondary:} AUROC/PR for logical classification, calibration (ECE).
+\end{itemize}
+
+\textbf{Ablations:} remove spatial, remove temporal, replace analog with binarized, remove odd/even drift.
+
+\textbf{Fairness:} Equal syndrome budgets across methods; same rounds $T$ and dataset sizes.
+
+\section{Minimal Reproduction Pipeline}
+
+\begin{verbatim}
+Stim (SI1000 depolarizing)
+   -> PyMatching (hard baseline) → LER(p)
+   -> TransformerQEC (soft input)
+           - Pretrain on Pauli (Stim)
+           - Fine-tune on analog Gaussian (odd/even bias)
+           - Evaluate → LER(p) + CIs
+\end{verbatim}
+
+\section{Reproducibility \& Artifacts}
+
+\begin{itemize}
+    \item \textbf{Seeds:} torch, numpy, Python, Stim.
+    \item \textbf{Configs:} YAML for datasets, model, optimizer, and noise parameters.
+    \item \textbf{Checkpoints:} save pretrain and fine-tune separately; export ONNX for the head.
+    \item \textbf{Data:} store raw Stim circuits, DEMs, and serialized analog readouts (e.g., Parquet).
+    \item \textbf{External data:} If you use public releases (e.g., Zenodo: 6804040), document exact subsets and any conversions.
+\end{itemize}
+
+\section{Implementation Sketches}
+
+\subsection{Stim data generation}
+
+\begin{lstlisting}[language=Python]
+import stim, numpy as np
+
+def gen_dem(distance=3, rounds=5, p=1e-3, shots=20000):
+    circ = stim.Circuit.generated("surface_code:rotated_memory_z",
+                                  distance=distance, rounds=rounds, noise=p)
+    dem = circ.detector_error_model()
+    sampler = dem.compile_sampler()
+    det_samples = sampler.sample(shots=shots)  # shape [shots, num_detectors]
+    # logical observable samples (e.g., for Z logical):
+    obs_sampler = circ.compile_detector_sampler()  # or use dem observables mapping
+    # keep (det_samples, logical_labels)
+    return det_samples  # plus labels obtained consistently
+\end{lstlisting}
+
+\subsection{Analog readout wrapper}
+
+\begin{lstlisting}[language=Python]
+def attach_analog(det_bits, m0=1.2, m1=1.2, sigma=0.8):
+    # det_bits: [shots, N*T] in {0,1}
+    shots, D = det_bits.shape
+    rounds = ...  # know T; compute per-token round index 0..T-1
+    r = np.empty_like(det_bits, dtype=np.float32)
+    for t in range(rounds):
+        mask_t = token_round_idx == t
+        mu0, mu1 = (+m0, -m1)
+        if (t % 2) == 0:   # even-round drift
+            mu0, mu1 = -mu0, -mu1
+        mu = np.where(det_bits[:, mask_t]==0, mu0, mu1)
+        r[:, mask_t] = np.random.normal(mu, sigma)
+    return r
+\end{lstlisting}
+
+\subsection{Transformer input builder}
+
+\begin{lstlisting}[language=Python]
+ tokens = concat over detectors x rounds; build (r, det_id, t)
+ embed: Linear(1->d), Emb(det_id), Emb(t) -> sum or concat(+Linear) -> Transformer
+\end{lstlisting}
+
+\section{Milestones (two weeks of focused work)}
+
+\begin{itemize}
+    \item \textbf{D0--D2:} Stim data + PyMatching baseline; LER(p) sanity curve.
+    \item \textbf{D3--D5:} Tokenization + embeddings + TransformerQEC fork; BCE training loop.
+    \item \textbf{D6--D8:} Pretraining on SI1000 depolarizing; freezing schedule defined.
+    \item \textbf{D9--D11:} Fine-tune on analog Gaussian with odd/even bias; hyper sweeps.
+    \item \textbf{D12--D14:} Full evaluation, ablations, CIs; writeup + plots.
+\end{itemize}
+
+\section{Risks \& Mitigations}
+
+\begin{itemize}
+    \item \textbf{Analog mismatch:} Start with simple Gaussians; add small calibration jitter (mean/sigma) during fine-tune to improve robustness.
+    \item \textbf{Label sparsity (few logical-1):} increase rounds $T$, raise $p$ slightly for balanced batches, or use \texttt{pos\_weight}/focal loss.
+    \item \textbf{Overfitting to bias pattern:} randomize bias amplitude and parity schedule during training; keep a held-out bias pattern for test.
+\end{itemize}
+
+\section{What to Put in the Paper/Report}
+
+\begin{enumerate}
+    \item Clear statement of software-only constraint and why SI1000 + analog readout is a principled surrogate.
+    \item Reproducibility table (seeds, versions, configs).
+    \item LER curves comparing PyMatching vs Transformer (with CIs).
+    \item Ablations that isolate gains from soft input and spatio-temporal encodings.
+    \item Discussion of limitations vs true hardware fitted DEMs.
+\end{enumerate}
+
+\section{TL;DR}
+
+\begin{callout}{Key Points}
+\begin{itemize}
+    \item Use Stim SI1000 for pretraining, Gaussian analog (odd/even bias) for fine-tune.
+    \item PyMatching is your solid hard-input baseline.
+    \item The TransformerQEC fork with spatial+temporal+analog embeddings + BCEWithLogitsLoss gets you a faithful, hardware-free AlphaQubit reproduction.
+    \item \textbf{Optional:} incorporate compatible public datasets (e.g., Zenodo 6804040) for extra stress tests and to demonstrate generalization.
+\end{itemize}
+\end{callout}
+
+\end{document}
