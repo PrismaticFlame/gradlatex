@@ -1,0 +1,39 @@
+ID,Task,Owner,Est.,Completed
+1.1,Set up github repository under which out decoder solution lives,Christopher,0.75,TRUE
+1.2,Set up virtual environment for decoder solution,Christopher,1.5,TRUE
+1.3,Create Docker image and container for decoder,Christopher,1,TRUE
+1.4,Run test Docker containing virtualizations,Christopher,0.75,TRUE
+1.5,Create surface code code in Stim to simulate surface code error dataset,Christopher,4.5,FALSE
+1.6,Generate / simulate Stim datasets,Mara,3.75,FALSE
+1.7,Implement analog readout wrapper ,Mara,3,FALSE
+1.8,Connect to the ARC,Arjun,3.75,FALSE
+1.9,Construct embedding scheme (with vectorizing training data and tokenization),Arjun,7,FALSE
+1.1,Implement proposed transformer error correction architecture with pipeline,Christopher,5.25,FALSE
+1.11,Train on Stim data on ARC,Arjun,4.75,FALSE
+1.12,Test and evaluate performance on Stim data,Mara,2.5,FALSE
+1.13,Iteratively adjust parameters and model architecture to improve performance on Stim data,Tzu Chen,4,FALSE
+1.14,Adjust embedding scheme / pipeline for sycamore dataset,Christopher,3.25,FALSE
+1.15,Train on Sycamore data on ARC,Arjun,5.25,FALSE
+1.16,Test and evaluate performance on Sycamore data,Tzu Chen,2.75,FALSE
+1.17,Iteratively adjust parameters and model architecture to improve performance on Sycamore data,Tzu Chen,3.75,FALSE
+2.1,Create code other quantum codes using Stim,Mara,7.25,FALSE
+2.2,Generate dataset for other quantum codes,Christopher,4.5,FALSE
+2.3,Adapt readout wrapper to accept other datasets,Christopher,4.25,FALSE
+2.4,Adapt embedding scheme to accept different quantum code data (with unique vectorization schemes),Arjun,6.25,FALSE
+2.5,Train on Stim data for other quantum codes,Christopher,5.25,FALSE
+2.6,Test and evaluate performance on Stim data for other quantum codes,Christopher,5.5,FALSE
+3.1,Implement MWPM basline error corrction on simulated Stim data,Arjun,3.75,FALSE
+3.2,Evaluate MWPM basline performance on Stim data,Tzu Chen,2.5,FALSE
+3.3,Implement MWPM basline error corrction on Sycamore data,Tzu Chen,4,FALSE
+3.4,Evaluate MWPM basline performance on Sycamore data,Mara,3.5,FALSE
+3.5,Build branch from neural net pipeline to send embedded data to Google's transformer model,Tzu Chen,4.25,FALSE
+3.6,Train Google's transformer model on Stim Data,Christopher,5,FALSE
+3.7,Evaluate Google's transformer performance on Stim data,Tzu Chen,2.75,FALSE
+3.8,Train Google's transformer model on Sycamore Data,Arjun,5,FALSE
+3.9,Evaluate Google's transformer performance on Sycamore data,Christopher,3.25,FALSE
+3.1,Compare performance with proposed solution using LER(p) evaluation metric,Arjun,3.5,FALSE
+3.11,Generate visualizations and report,Mara,3.75,FALSE
+4.1,Adapt readout module to listen and accept realtime error data,Arjun,2.75,FALSE
+4.2,Feed into pipeline of transformer model that evaluates error correction output,Tzu Chen,3.5,FALSE
+4.3,Evaluate and verify real-time performance and throughput,Tzu Chen,4,FALSE
+4.4,Construct interface to provide option to modify parametrs of error correction network architecture,Mara,4.25,FALSE

@@ -1,0 +1,15 @@
+,,,,,,,,
+,,,,,,,,
+Item,Task Backlog,Owner 1,Owner 2,Est. Completion Time(hours),Status,Actual Completion Time (Hours),Demo,Notes
+1,Set up virtual environment,Christopher,N/A,2,In Progress,,,
+2,Set up github repository,Christopher,N/A,2,Done,3,,
+3,Create Surface Code code in stim,Mara,Christopher,5,To Do,,,
+4,Simulate surface code,Mara,Christopher,5,To Do,,,
+5,Add error correction,Arjun,Mara,10,To Do,,,Requires completion of Task 4
+6,Validate correction results,Tzu Chen,N/A,8,To Do,,,
+7,Compare with baseline results,Mara,Christopher,10,To Do,,,
+8,Set up docker with an example,Christopher,N/A,4,Done,3,,
+9,Test running docker,Mara,N/A,2,To Do,,,Requires completion of Task 8
+10,Test running docker,Tzu Chen,N/A,2,To Do,,,Requires completion of Task 8
+11,Test running docker,Christopher,N/A,2,Done,1,,Requires completion of Task 8
+12,Test running docker,Arjun,N/A,2,Done,,,Requires completion of Task 8
