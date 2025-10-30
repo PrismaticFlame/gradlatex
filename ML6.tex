@@ -10,22 +10,76 @@
 
 \section{EDA}
 
+\subsection{Shelve Location vs Sales Analysis}
+
+\subsection{One-Hot Encoding}
+
+\subsection{Train-Test Split and Standardization}
 
 \section*{Feature Selection \& Prediction}
 
 \section{Backward Stepwise Regression}
 
+\subsection{Elimination Process Table}
+
+\subsection{OLS Regression Summary}
+
+\subsection{Final Regression Model}
+
+\subsection{Prediction vs Test Set}
+
+\subsection{Mean Squared Error}
+
 \section{PCA}
+
+\subsection{95\% Variance Explained}
+
+\subsection{Cumulative Variance Plot}
+
+\subsection{95\% Variance Threshold}
+
+\subsection{What Does PCA Say?}
+PCA has told us that of the 11 original features, we need 8 principal components to explain 95\% of the variance. This is indicating that our data has some redundancy/correlation,
+so after we transform the data into a new coordinate system, we can sufficiently use 8 dimensions instead of 11. However, since PCA gives us a weighted combination of all original features, and not the individual features,
+it doesn't tell us explicitly which features to remove, but has created new features for us to use. To learn which features we should remove, we should use backward/forward stepwise regression, or use a Random Forest model to find which features to split on.
 
 \section{Random Forest Analysis}
 
-\section{Table of Metrics}
+\subsection{Feature Importance Plot}
+
+\subsection{Feature Selection Comparison}
+
+\subsection{OLS Regression on Selected Features}
+
+\subsection{Prediction vs Test Set}
+
+\subsection{Mean Squared Error}
+
+\section{Comparison of Feature Selection Methods}
+
+\subsection{Metrics Comparison Table}
+
+\subsection{Recommended Method and Features}
 
 \section{Prediction Interval}
 
-\section{Polynominal Regression and Grid Search}
+\subsection{95\% Prediction Intervals}
 
-\section{Simple Linear Regression}
+\subsection{Prediction Interval Plot}
+
+\section{Polynomial Regression and Grid Search}
+
+\subsection{Grid Search with RMSE Minimization}
+
+\subsection{Optimum Polynomial Order}
+
+\subsection{RMSE vs Polynomial Order Plot}
+
+\subsection{Training and Prediction}
+
+\subsection{Mean Squared Error}
+
+\section{Simple Linear Regression Proof}
 
 In a simple linear regression with n observations:
 \begin{equation}
