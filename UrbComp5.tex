@@ -10,6 +10,47 @@
 
 \section{3x4 Real Matrix}
 
+To construct a 3x4 real, non-zero matrix, we must start with two vectors that are both real and non-zero.
+Then, we multiply these vectors together to get our $A$ matrix.
+
+\begin{align}
+    u = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix} \quad
+    v = \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \end{bmatrix} \\
+    A = u \cdot v^T = \begin{bmatrix}
+        1 & 1 & 1 & 1 \\
+        2 & 2 & 2 & 2 \\
+        3 & 3 & 3 & 3 \\
+    \end{bmatrix}
+\end{align}
+
+Now that we have our A matrix, we must remember the SVD equation: $A = U \Sigma V^T$. To get one
+singular value in the SVD reconstruction that yields A exactly, we should start with finding $V^T$, but
+more specifically $V$ which is defined as $V = A^T A$.
+
+\begin{align}
+    V = A^T A = \begin{bmatrix}
+        1 & 2 & 3 \\
+        1 & 2 & 3 \\
+        1 & 2 & 3 \\
+        1 & 2 & 3
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 & 1 & 1 & 1 \\
+        2 & 2 & 2 & 2 \\
+        3 & 3 & 3 & 3 \\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+    \end{bmatrix}
+\end{align}
+
+What an easy matrix to deal with! Given that V is defined as "an $n \times n$ orthogonal matrix
+whose columns are unit eigenvectors of $A^T A$, and that this is a rank 1 matrix 
+
 \section{Clustering of 1D Dataset}
 
 \section{Urban Mobility Matrix}

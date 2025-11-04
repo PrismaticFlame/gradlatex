@@ -8,9 +8,9 @@
 
 \maketitlepage
 
-\begin{important}{Console Outputs}
-    For every question that requires an output in the console of the program, the output will be seen in the program,
-    but I will also include answers in this document for easier grading (I hope). Thank you for your hard work!
+\begin{important}{Quick Notes}
+    For every question that requires an output in the console of the program, I will also include the output in this document for easier grading (I hope). Also, the page count is a little inflated
+    because of images and the derivation at the end, so I apologize about that. Thank you for your hard work!
 \end{important}
 
 \section{EDA}
@@ -90,36 +90,31 @@ Five OLS regression summaries are provided showing the elimination process:
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/ols_summary_iter1.png}
-    \caption{OLS Regression Summary - Iteration 1 (11 features)}
-    \label{fig:ols_iter1}
+    \caption{OLS Regression Summary - Iteration 1 (11 features)} \label{fig:ols_iter1}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/ols_summary_iter2.png}
-    \caption{OLS Regression Summary - Iteration 2 (10 features)}
-    \label{fig:ols_iter2}
+    \caption{OLS Regression Summary - Iteration 2 (10 features)} \label{fig:ols_iter2}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/ols_summary_iter3.png}
-    \caption{OLS Regression Summary - Iteration 3 (9 features)}
-    \label{fig:ols_iter3}
+    \caption{OLS Regression Summary - Iteration 3 (9 features)}\label{fig:ols_iter3}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/ols_summary_iter4.png}
-    \caption{OLS Regression Summary - Iteration 4 (8 features)}
-    \label{fig:ols_iter4}
+    \caption{OLS Regression Summary - Iteration 4 (8 features)}\label{fig:ols_iter4}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/ols_summary_iter5.png}
-    \caption{OLS Regression Summary - Iteration 5 (7 features)}
-    \label{fig:ols_iter5}
+    \caption{OLS Regression Summary - Iteration 5 (7 features)}\label{fig:ols_iter5}
 \end{figure}
 
 \textbf{Final Model (Iteration 5) - 7 Features:}
@@ -568,7 +563,56 @@ We can then continue on
     \sum_{i=1}^n x_i (y_i - (\bar{y} - \hat{\beta}_1 \bar{x}) - \hat{\beta}_1 x_i) &= 0 \\
     \sum_{i=1}^n x_i (y_i - \bar{y} - \hat{\beta}_1 (x_i - \bar{x})) &= 0 \\
     \sum_{i=1}^n x_i (y_i - \bar{y}) - \sum_{i=1}^n x_i \hat{\beta}_1 x_i (x_i - \bar{x}) &= 0 \\
-    \hat{\beta}_1 &= \frac{\sum_{i=1}^n x_i (y_i - \bar{y})}{\sum_{i=1}^n x_i (x_i - \bar{x})} \\
 \end{align}
+
+Which then becomes
+\begin{equation}
+    \boxed{\hat{\beta}_1 = \frac{\sum_{i=1}^n x_i (y_i - \bar{y})}{\sum_{i=1}^n x_i (x_i - \bar{x})}}
+\end{equation}
+
+However, that is not exactly what we started with. So, what happened? Well, knowing what the answer should be,
+we can work backwards to see that the answer I found is actually the correct answer.
+
+Since we know the answer is 
+\begin{equation}
+    \hat{\beta}_1 = \frac{\sum_{i=1}^{n} (x_i - \bar{x}) (y_i - \bar{y})}{\sum_{i=1}^{n} (x_i - \bar{x})^2}
+\end{equation}
+
+let's see what happens when we expand out the numerator and denominator.
+
+\begin{align}
+    \sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y}) &= \sum_{i=1}^{n} x_i(y_i - \bar{y}) - \sum_{i=1}^{n} \bar{x}(y_i - \bar{y}) \\
+    &= \sum_{i=1}^{n} x_i (y_i - \bar{y}) - \bar{x} \sum_{i=1}^{n} (y_i - \bar{y})
+\end{align}
+
+When expanding it out, we find that $\bar{x}$ can come out of the summation as it is a constant,
+but we also know that the second term, the \textit{Sum of Deviations}, is always 0. Since we know that
+it always goes to zero we are left with
+
+\begin{align}
+    &= \sum_{i=1}^{n} x_i (y_i - \bar{y}) - 0 \\
+    &= \sum_{i=1}^{n} x_i (y_i - \bar{y})
+\end{align}
+
+which is our numerator from earlier! Now let's move onto our denominator
+
+\begin{align}
+    \sum_{i=1}^{n}(x_i - \bar{x})^2 &= \sum_{i=1}^{n}(x_i - \bar{x})(x_i - \bar{x}) \\
+    &= \sum_{i=1}^{n}x_i (x_i - \bar{x}) - \sum_{i=1}^{n} \bar{x} (x_i - \bar{x}) \\
+    &= \sum_{i=1}^{n}x_i (x_i - \bar{x}) - \bar{x} \sum_{i=1}^{n} (x_i - \bar{x})
+\end{align}
+
+We once again have found that \textit{Sum of Deviations} term and we know that it always goes to zero! So, we are left with
+
+\begin{align}
+    &= \sum_{i=1}^{n}x_i (x_i - \bar{x}) - 0\\
+    &= \sum_{i=1}^{n}x_i (x_i - \bar{x})
+\end{align}
+
+Which is our denominator from earlier! So, we have ultimately found that
+
+\begin{equation}
+    \boxed{\hat{\beta}_1 = \frac{\sum_{i=1}^{n} (x_i - \bar{x}) (y_i - \bar{y})}{\sum_{i=1}^{n} (x_i - \bar{x})^2} = \hat{\beta}_1 = \frac{\sum_{i=1}^n x_i (y_i - \bar{y})}{\sum_{i=1}^n x_i (x_i - \bar{x})}}
+\end{equation}
 
 \end{document}
