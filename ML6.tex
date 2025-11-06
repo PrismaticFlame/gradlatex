@@ -1,5 +1,5 @@
 \documentclass[12pt]{article}
-\usepackage{cwilliams-standard}
+\usepackage{styles/cwilliams-standard}
 
 \setclass{\MLONE}
 \settitle{Homework 6 \\ \Large{Simply \& Multiple Linear Regression Analysis}}
@@ -558,7 +558,7 @@ With the same substitution and rule from the first derivation, we get
 We can then continue on
 
 \begin{align}
-    \frac{\partial \text{RSS}}{\partial \hat{\beta}_1} &= -2 \sum_{i=1}^n x_i (y_i - \hat{\beta}_0 - \hat{\beta}_1 x_i) = 0 \\
+    \frac{\partial \text{RSS}}{\partial \hat{\beta}_1} = -2 \sum_{i=1}^n x_i (y_i - \hat{\beta}_0 - \hat{\beta}_1 x_i) &= 0 \\
     \sum_{i=1}^n x_i (y_i - \hat{\beta}_0 - \hat{\beta}_1 x_i) &= 0 \\
     \sum_{i=1}^n x_i (y_i - (\bar{y} - \hat{\beta}_1 \bar{x}) - \hat{\beta}_1 x_i) &= 0 \\
     \sum_{i=1}^n x_i (y_i - \bar{y} - \hat{\beta}_1 (x_i - \bar{x})) &= 0 \\
