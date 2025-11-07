@@ -8,6 +8,10 @@
 
 \maketitlepage
 
+\begin{important}[Code]
+    I will include the link to my code at the top of the file this time. Apologies for making you look all over for them last time!
+\end{important}
+
 \section{3x4 Real Matrix}
 
 To construct a 3x4 real, non-zero matrix, we must start with two vectors that are both real and non-zero.
@@ -49,9 +53,75 @@ more specifically $V$ which is defined as $V = A^T A$.
 \end{align}
 
 What an easy matrix to deal with! Given that V is defined as "an $n \times n$ orthogonal matrix
-whose columns are unit eigenvectors of $A^T A$, and that this is a rank 1 matrix 
+whose columns are unit eigenvectors of $A^T A$, and that this is a rank 1 matrix. We can also find that our singular value is $2 \sqrt{14}$.
+
+Since we know the equation of SVD, we can break it down a bit further:
+\begin{equation}
+    A = U \Sigma V^T = \sigma_1 u_1 v_1^T + \sigma_2 u_2 v_2^T + ...
+\end{equation}
+
+But, since this is a rank 1 matrix, we know that only the first term will have any values of use. So, it becomes:
+\begin{equation}
+    A = U \Sigma V^T = \sigma_1 u_1 v_1^T
+\end{equation}
+
+where $u$ is the normalized $u$ vector and $v$ is the normalized $v$ vector.
+
+\begin{equation}
+    u_1 = \frac{u}{||u||} = \frac{1}{\sqrt{1^2 + 2^2 + 3^2}} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix}
+    =
+    \frac{1}{14} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix} \\
+
+    v_1 = \frac{1}{\sqrt{1^2 + 1^2 + 1^2 + 1^2}} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix}
+    =
+    \frac{1}{2} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix}
+\end{equation}
+
+Now, with all our components together, we can find if our SVD decomposition can recreate our original $A$.
+
+\begin{align}
+    A = \sigma_1 u_1 v_1^T = 2 \sqrt{14} \cdot \frac{1}{14} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix} \cdot \frac{1}{2} \begin{bmatrix}
+        1 & 2 & 3
+    \end{bmatrix} \\
+
+    A = 2 \frac{1}{14} \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix} \cdot \frac{1}{2} \begin{bmatrix}
+        1 & 2 & 3
+    \end{bmatrix} \\
+
+    A = \begin{bmatrix}
+        1 \\ 2 \\ 3
+    \end{bmatrix} \begin{bmatrix}
+        1 & 2 & 3
+    \end{bmatrix}
+\end{align}
 
 \section{Clustering of 1D Dataset}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/IMG_0165.jpeg}
+    % \caption{}
+    % \label{}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/IMG_0166.jpeg}
+    % \caption{}
+    % \label{}
+\end{figure}
 
 \section{Urban Mobility Matrix}
 
@@ -145,5 +215,6 @@ High singular values indicate that those patterns explain most of the variance i
 \subsection{K-Means++}
 
 \subsection{}
+
 
 \end{document}
