@@ -1,5 +1,5 @@
 \documentclass[12pt]{article}
-\usepackage{cwilliams-standard}
+\usepackage{styles/cwilliams-standard}
 
 \setclass{\URBCOMP}
 \settitle{Homework 5}
@@ -10,11 +10,133 @@
 
 \section{3x4 Real Matrix}
 
+To construct a 3x4 real, non-zero matrix, we must start with two vectors that are both real and non-zero.
+Then, we multiply these vectors together to get our $A$ matrix.
 
+\begin{align}
+    u = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix} \quad
+    v = \begin{bmatrix} 1 \\ 1 \\ 1 \\ 1 \end{bmatrix} \\
+    A = u \cdot v^T = \begin{bmatrix}
+        1 & 1 & 1 & 1 \\
+        2 & 2 & 2 & 2 \\
+        3 & 3 & 3 & 3 \\
+    \end{bmatrix}
+\end{align}
+
+Now that we have our A matrix, we must remember the SVD equation: $A = U \Sigma V^T$. To get one
+singular value in the SVD reconstruction that yields A exactly, we should start with finding $V^T$, but
+more specifically $V$ which is defined as $V = A^T A$.
+
+\begin{align}
+    V = A^T A = \begin{bmatrix}
+        1 & 2 & 3 \\
+        1 & 2 & 3 \\
+        1 & 2 & 3 \\
+        1 & 2 & 3
+    \end{bmatrix}
+    \begin{bmatrix}
+        1 & 1 & 1 & 1 \\
+        2 & 2 & 2 & 2 \\
+        3 & 3 & 3 & 3 \\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+        14 & 14 & 14 & 14 \\
+    \end{bmatrix}
+\end{align}
+
+What an easy matrix to deal with! Given that V is defined as "an $n \times n$ orthogonal matrix
+whose columns are unit eigenvectors of $A^T A$, and that this is a rank 1 matrix 
 
 \section{Clustering of 1D Dataset}
 
 \section{Urban Mobility Matrix}
+
+For this large of a matrix, determining the rank (especially since it is not explicity defined) is about a couple things:
+\begin{enumerate}
+    \item The rank must be less than or equal to the smaller of $n$ and $m$ of the $n \times m$ matrix.
+    \item How many linearly independent rows there are in the matrix. 
+\end{enumerate}
+
+Following these rules, we can determine that the rank can be no more than 24, but the rank would more likely be somewhere between 6 - 12.
+
+My reasoning for the rank being between 6 and 12 is that the rank of a matrix also describes the linearly independent rows in the matrix, or in other words the number of original patterns.
+So we can extrapolate this to mean the number of independent patterns in the movement of people across time and space. There is likely not that many different patterns of behavior throughout the day:
+\vspace{0.5cm}
+\begin{minipage}[t]{0.48\textwidth}
+    \textbf{Weekday Patterns}
+    \begin{enumerate}
+        \item Relatively low activity between midnight and ~6am.
+        \item Rush hour between 6am-9am
+        \item Lunch rush between 11am-1pm
+        \item Rush hour between 4pm-7pm
+        \item Dinner rush between 5pm-8pm
+        \item Some night life (depending on day/holiday) between 8pm-11pm.
+    \end{enumerate}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \textbf{Weekend Patterns}
+    \begin{enumerate}
+        \item Some activity from Midnight to ~6am.
+        \item "Early birds" getting up from 6am-8am.
+        \item Breakfast rush from  8am-10am
+        \item Church rush from 7am-12pm.
+        \item Brunch/Lunch rush from 11am-2pm
+        \item Afternoon activities from 2pm-5pm
+        \item Dinner rush from 5pm-8pm
+        \item Night life from 8pm-Midnight
+    \end{enumerate}
+\end{minipage}
+
+\vspace{0.5cm}
+
+That would be the general trend across most days. However, things to take into account would be the parts of the city that we are looking at.
+Places like "Downtown" and "Midtown" might follow these trends with the daily rushes for work and food, but if we are looking at a portion of the city
+that has mainly parks ("Central Park") or entertainment districts ("Broadway") then those values will be different.
+So in aggregate the rank may be anywhere from 6-12, if we split the matrix up into the different portions of the city we could find a range of ranks anywhere
+from 4-16, a much wider range because of different patterns in different parts of the city.
+
+\begin{important}{Quick Aside}
+    It's important to note that some of those Weekday Patterns have overlap that would be cause for assuming that they are not linearly independent and could be
+    reasoned within a single "Work Day" pattern. I am separating them because I believe those patterns would appear if you split the matrix into different
+    sections of the city. There would not be a "Lunch rush" at the office, but there would be at a Chipotle down the street.
+\end{important}
+
+Changes in the city that would affect the rank would be structural changes (or some major events) that cause people
+to move either more uniformly or more uniquely (decrease and increase respectively). Here are some changes that would affect the rank:
+\vspace{0.5cm}
+
+\begin{minipage}[t]{0.48\textwidth}
+    \textbf{Changes that would \textit{increase} rank}:
+    \begin{enumerate}
+        \item Major construction projects.
+        \item Seasonal changes (Ft. Lauderdale, D.C. during Cherry Blossom, etc...)
+        \item Event days (Sport matches, Voting Days, Conventions. etc...)
+    \end{enumerate}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+    \textbf{Changes that would \textit{decrease} rank}:
+    \begin{enumerate}
+        \item Gig-Economy (Doordash, Uber eats)
+        \item Mixed Use Buildings (Skyscraper that has apartments, offices, and restaurants)
+        \item Better Transit Patterns (Reduce traffic, more people using one mode of transport)
+        \item Work-from-home adoption.
+    \end{enumerate}
+\end{minipage}
+
+\vspace{0.5cm}
+
+The increase rank changes seem a bit more disruptive to the city life, as it would cause more people to move in more unique ways, and make the city
+appear more crowded and definitely more busy. The decrease rank changes seem like that would make life move a bit more smoothly but take the intrigue out!
+They would condense the movement of people and everyone would fit into more stable and steady patterns.
+
+As for what the SVD of this matrix would mean, they would describe the variance of patterns in the data. 
+High singular values indicate that those patterns explain most of the variance in mobility across the city. Low singular values represent patterns that contribute little to explaining the overall data.
 
 \section{Citibike Dataset (again...)}
 
