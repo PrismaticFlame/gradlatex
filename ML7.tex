@@ -1,4 +1,4 @@
-\documentclass[12pt][article]
+\documentclass[12pt]{article}
 \usepackage{styles/cwilliams-standard}
 
 \setclass{\MLONE}
@@ -7,5 +7,151 @@
 \begin{document}
 
 \maketitlepage
+
+\section{Riding Mower}
+
+\subsection{Logistic Regression}
+
+As I am unsure which equation is desired to express the model, I will leave both equations that I used in the classification here:
+
+\begin{equation} \label{eq:1}
+    \boxed{\text{P(Owner)} = \frac{1}{1 + e^{-(-25.9382 + 0.1109(\text{Income}) + 0.9638(\text{Lot Size}))}}}
+\end{equation}
+
+\begin{equation} \label{eq:2}
+    \boxed{\log(\frac{\text{P(Owner)}}{\text{P(Nonowner)}}) = -25.9382 + 0.1109(\text{Income}) + 0.9638(\text{Lot Size})}
+\end{equation}
+
+\subsection{Classification with Regression Model}
+
+I first calculated the exponent of equation \ref{eq:1} and then plugged that into that equation to get the 0 - 1 value.
+\begin{align}
+    \text{Exp} = 25.9382 - 0.1109(60) - 0.9638(18.4) = 1.55028 \\
+    \text{P(Owner)} = \frac{1}{1 + e^{1.55028}} = 0.17504 \ (\text{Nonowner})
+\end{align}
+
+Repeating this process for each observation, here are the values I got:
+
+\begin{align}
+    \text{P(Owner)} = \frac{1}{1 + e^{-2.0662}} = 0.88757 \ (\text{Owner}) \\
+    \text{P(Owner)} = \frac{1}{1 + e^{-0.34028}} = 0.58425 \ (\text{Nonowner}) \\
+    \text{P(Owner)} = \frac{1}{1 + e^{3.9743}} = 0.01844 \ (\text{Nonowner}) \\
+    \text{P(Owner)} = \frac{1}{1 + e^{-3.00188}} = 0.95265 \ (\text{Owner}) \\
+    \text{P(Owner)} = \frac{1}{1 + e^{-1.26978}} = 0.78070 \ (\text{Owner}) \\
+\end{align}
+
+And thus got this table of values that shows "Owners" and "Nonowners" as well as the "truth".
+
+\begin{table}[H]
+\centering
+\caption{Original Observations with Predictions and Truths}
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Customer \#} & \textbf{Income} & \textbf{Lot Size} & \textbf{Ownership} & \textbf{$\hat{Y}$} & \textbf{Truth} \\
+\midrule
+1 & 60 & 18.4 & Owner & Nonowner & FN \\
+2 & 64.8 & 21.6 & Owner & Owner & TP \\
+3 & 84 & 17.6 & Nonowner & Nonowner & TN \\
+4 & 59 & 16 & Nonowner & Nonowner & TN \\
+5 & 108 & 17.6 & Owner & Owner & TP \\
+6 & 75 & 19.6 & Nonowner & Owner & FP \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Confusion Matrix}
+
+\begin{table}[h]
+\centering
+\caption{Confusion Matrix}
+\begin{tabular}{cc|c|c|}
+\cline{3-4}
+& & \multicolumn{2}{c|}{\textbf{Predicted Class}} \\
+\cline{3-4}
+& & Owner & Nonowner \\
+\hline
+\multicolumn{1}{|c|}{\multirow{2}{*}{\textbf{Actual Class}}} & 
+\multicolumn{1}{|c|}{Owner} & 2 & 1 \\
+\cline{2-4}
+\multicolumn{1}{|c|}{} & 
+\multicolumn{1}{|c|}{Nonowner} & 1 & 2 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Metrics for Model}
+
+\begin{align}
+    \text{Accuracy} = \frac{TP + TN}{TP + FN + TN + FP} = \frac{4}{6} = 66.7\% \\
+    \text{Precision} = \frac{TP}{TP + FP} = \frac{2}{3} = 66.7\% \\
+    \text{Recall} = \frac{TP}{TP + FN} = \frac{2}{3} = 66.7\%
+\end{align}
+
+\section{Cross-Entropy Function Plotted}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/log_loss_function.png}
+    \caption{Plot of the Log-Loss Function}
+\end{figure}
+
+\section{Regression Model (Part 2)}
+
+\subsection{Confusion Matrix \& ROC Curve (with AUC Legend)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/q3-cm-roc.png}
+    \caption{Image showing the Confusion Matrix and ROC Curve}
+\end{figure}
+
+\subsection{Model Metrics}
+
+There is a PrettyTable of the metrics in the console output, but here is that output as well:
+
+\begin{figure}[H]
+\centering
+\begin{BVerbatim}
++-------------------------------+
+|   Model Performance Metrics   |
++----------+--------+-----------+
+| Accuracy | Recall | Precision |
++----------+--------+-----------+
+|  93.50%  | 90.65% |   97.00%  |
++----------+--------+-----------+
+\end{BVerbatim}
+\caption{C++ code}
+\end{figure}
+
+\section{Smarket.csv}
+
+\subsection{Balanced or Imbalanced?}
+
+Finding the distribution of the dataset to see if it was balanced or imbalanced, I found these values:
+\begin{center}
+    Direction \\
+    Up      648 \\
+    Down    602 \\
+\end{center}
+
+which shows that the dataset is very nearly evenly split, so SMOTE is not required. Regardless, I plotted the difference between the dataset with and without SMOTE.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.87\textwidth]{images/balance_comparison.png}
+    \caption{Balance Comparison of Non-SMOTE and SMOTE of Dataset}
+\end{figure}
+
+As is clearly visible, the difference between the datasets without and with SMOTE are not different enough to require SMOTE. So, for the rest of the question the dataset will be without SMOTE.
+
+\subsection{First 5 of Train and Test}
+
+
+
+\subsection{Logistic Regression Model}
+
+\subsection{Grid Search with Cross-Validation}
+
+
 
 \end{document}
