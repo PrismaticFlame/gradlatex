@@ -1,0 +1,107 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+% Set up document metadata
+\setauthors{Tzu-Chen Chiu, Arjun Sivakumar, Mara Schimmel, Christopher Williams}
+\setheaderauthors{Chiu, Sivakumar, Schimmel, Williams}
+\settitle{Sprint 1 Report}
+\setclass{IPD}
+
+\begin{document}
+
+\maketitlepage
+
+\section{Original Sprint 1 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint1_backlog.png}
+    \caption{Original Sprint 1 Backlog}
+\end{figure}
+
+\section{Sprint 1 Backlog - End of Sprint Status}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint1_backlog_end.png}
+    \caption{Original Sprint 1 Backlog Updated at the End of the Sprint}
+\end{figure}
+
+\section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage tasks.
+
+\section{Sprint Retrospective}
+
+\subsection*{Mara}
+I implemented my goals for this sprint, with some time to readjust to using GitHub and VSCode again. I had to deal with my account not connecting to the repo correctly, which I was able to resolve after a few days, allowing me to push to the repo and begin contributions. Aside from setup issues, I feel this sprint was a success.
+
+\subsection*{Chris}
+I implemented all tasks that I was assigned to do during the sprint. Impediments that I encountered were mainly due to time, other responsibilities, or being faced with a new technology that I wasn't familiar with (Docker, Stim). Issues that were faced as a team were mainly relegated to how we should handle working on and contributing to the project as a team and what works best for us. We came to the conclusion of pushing to separate branches on our repo and doing pull requests and reviewing them together.
+
+\subsection*{Tzu-Chen}
+I am still working on the backlog item related to evaluating the baseline MWPM. The progress has been slightly postponed because this is a brand-new area for me, and I needed to conduct extensive preliminary research to determine which MWPM variant best suits our project. In parallel, I have completed the initial experiment design and am now revising it based on our mentor's feedback to fine-tune the methodology.
+
+\subsection*{Arjun}
+My tasks for this sprint were:
+\begin{itemize}
+    \item 1.4: Run docker test
+    \item 3.1: Implement MWPM baseline error correction on simulated Stim data
+\end{itemize}
+
+I completed both these tasks successfully, with no issues arising from it. Some obstacles encountered on the way were in understanding how PyMatching library's MWPM implementation worked. Besides that, in terms of team collaboration, my task particularly had some dependency on the previous tasks, which was addressed through a meeting with our mentor from Northrop on Friday that also acted as a status update. It provided me with the information and clarification needed to complete my tasks successfully. In terms of ethical issues there were questions of data access and plagiarism, as we discussed using SI1000 noise model and data from the Google paper but decided against it for now and instead generate our own simulated data from Stim. Overall the implementation of the baseline went well but for the future we could use Sinter for automation of certain processes and streamline the pipeline.
+
+\section{Product Backlog (Updated)}
+
+Often, the first attempt at a user story does not contain enough detail to implement, or you identify additional user stories based on that original user story. The Sprint retrospective provides an opportunity to update your product backlog to account for these additions instructions. Review your initial user stories. List any new user stories you identified during the sprint, as well as any user stories you no longer plan to implement, and why you no longer plan to implement them. These changes require instructional staff approval.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/product_backlong_endof_sp1.png}
+    \caption{Product Backlog as of End of Sprint 1}
+\end{figure}
+
+\begin{aside}{Picture Quality}
+
+    We understand that this image is difficult to see what is going on, but a few tasks have been moved from "To Do" $\rightarrow$ "Done". The specific tasks are
+    1.1, 1.2, 1.5, 1.6, 3.1, 3.2, 1.3, 1.4 (for each member).
+
+\end{aside}
+
+\section{Issue Tracking}
+
+What issues have come up and need to be fixed:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Completed} \\ \midrule
+Notebooks & Docker did not support Jupyter notebooks & Completed & 11/5/2025 \\
+Data Gen & Creating synthetic decoder data in Stim & Completed & 11/5/2025 \\
+Decoder & Implement MWPM into decoder code & In Progress & N/A \\
+Scope & Difficulty determining scope of project/tasks/issues & In Progress & N/A \\
+Transformers & Learning how the heck a transformer works & In Progress & --- \\ \bottomrule
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
+\section{Sprint 2 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_backlog.png}
+    \caption{Sprint 2 Backlog}
+\end{figure}
+
+\section{Member Videos}
+
+\begin{itemize}
+    \item \textbf{Tzu-Chen}: \href{https://virginiatech-my.sharepoint.com/:v:/g/personal/tzuchen_vt_edu/EfE7-L_0ocBDqY-ODkhSMp0BPmvQHJmkrlyHW1AILJCqtA?xsdata=MDV8MDJ8Y2R3MjRAdnQuZWR1fGY5M2Q2NDVkMWNhNjRiZWE1MjFjMDhkZTIxODc3NDVifDYwOTU2ODg0MTBhZDQwZmE4NjNkNGYzMmMxZTNhMzdhfDB8MHw2Mzg5ODUwNjI4MDE4OTM2MzR8VW5rbm93bnxUV0ZwYkdac2IzZDhleUpGYlhCMGVVMWhjR2tpT25SeWRXVXNJbFlpT2lJd0xqQXVNREF3TUNJc0lsQWlPaUpYYVc0ek1pSXNJa0ZPSWpvaVRXRnBiQ0lzSWxkVUlqb3lmUT09fDB8fHw%3d&sdata=ZkxGSW9hNitITjBwZzR1L2Fja1grUzBVQk9yRjMrMmxXT0tOYWdmWm9MUT0%3d}{Video}
+    \item \textbf{Arjun}: Submitted with document
+    \item \textbf{Mara}: Submitted with document
+    \item \textbf{Chris}: Submitted with document
+\end{itemize}
+
+\end{document}
+
