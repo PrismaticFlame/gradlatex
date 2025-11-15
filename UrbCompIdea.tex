@@ -12,11 +12,46 @@
 
 \maketitlepage
 
-\section{Abstract}
+\section{Abstract}\label{sec:abstract}
 
-\section{Relevant Work}
+In current study of mobility flow, there is a common trend of utilizing large indicators that do not accurately
+show base trends. Projects that have used GDP, average/median household income, population density, and land use are using
+data that is inherently a black box and is regularly abused by countries and superpowers. 
 
-\section{Necessary Data (Preliminary)}
+When tariffs where imposed by the 47th President of the United States, companies within the U.S., in panic, stocked up and imports went up drastically. 
+While this is not a good thing, on paper and in the GDP calculation it appeared that the U.S. was doing better than ever because GDP rose. Short term gain for
+long term pain. This kind of data that can obfuscate the real factors that determine the movements of peoples are
+difficult to utilize effectively.
+
+This project proposes using currency exchange rates as a way to predict and analyze international population flows. 
+When a currency strengthens, people from that country travel more—like how elderly Chinese tourists have been exploring Europe 
+and the US as the Yuan has grown stronger. When a currency weakens, it attracts inbound visitors—similar to how Americans are 
+increasingly visiting Japan as the Yen has declined.
+
+Using machine learning, we could reasonably create a model that will predict broad population movements based on 
+economic trends in countries around the world (much like \textit{Psychohistory} from \textit{Foundation} by Isaac Asimov!).
+Utilizing databases from the IMF, UN, and other reputable sources (listed in Section \ref{sec:data}) will be used to compare
+economic strengths of countries and be used to determine population flow.
+
+\section{Relevant Work (Preliminary)}\label{sec:relwork}
+
+As stated above, there have been projects and studies that utilize factors that inherently have a difficult time capturing underlying trends and issues.
+However, it is necessary to see thet techniques employed that got the results they achieved. As well as to understand where the current
+literature is at and not reinvent the wheel where possible. Here is a list of papers that are related to the subject:
+
+\begin{description}
+    \item[A Machine Learning Approach to Modeling Human Migration \cite{robinson2017mlhumanmigration}:] Using socioeconomic factors and environmental characteristics like land use, GDP, and median income,
+    and utilizing machine learning, it was possible to predict inter-county and international migration flows with high accuracy and can be used under `what-if' scenarios
+    like `what if sea levels rise'.
+    \item[Forecasting asylum-related migration flows with machine learning and data at scale \cite{carammia2022forecastingasylum}:] The migration crisis of 2015-2016 in the European Union (EU) left admin's. unprepared, 
+    exposing shortcomings in migration forecasting. This study proposes a machine learning model that takes in administrative statistics as well as 
+    non-traditional data sources at scale to accurately prediction asylum seeking applications in the EU but can be expanded to other countries and any
+    context given enough information.
+    \item[Revisiting forced migration: A machine learning perspective \cite{micevska2021forcedmigration}:] Conflict is a major cause of migration and movment between countries. If 
+    there is conflict, it will force people away, or to migrate. Also, this project uses is the first to use internet penetration rate in explain migration flows.
+\end{description}
+
+\section{Necessary Data (Preliminary)}\label{sec:necdata}
 
 These are potential options for data that would be used in indicating the flow of population with economic indicators. 
 
@@ -38,9 +73,10 @@ These are potential options for data that would be used in indicating the flow o
         & \textcolor{green!60!black}{War/Conflict} & Necessary & Quantifiable & Viable \\
         & \textcolor{green!60!black}{Tariffs} & Necessary & Somewhat Quantifiable & Viable \\
         \cmidrule{2-5}
-        \multirow{5}{*}{\rotatebox[origin=c]{90}{Decent}} 
+        \multirow{6}{*}{\rotatebox[origin=c]{90}{Decent}} 
         & \textcolor{blue!60!black}{Visa Policy} & Potentially Necessary & Quantifiable & Viable \\
         & \textcolor{blue!60!black}{Presence of Int'l Chains} & Potentially Necessary & Quantifiable & Viable \\
+        & \textcolor{blue!60!black}{Standard Goods Prices} & Somewhat Necessary & Quantifiable & Potenitally Viable \\
         & \textcolor{blue!60!black}{Job Opportunity} & Potentially Necessary & Quantifiable & Potentially Viable \\
         & \textcolor{blue!60!black}{Age of Inflow/Outflow} & Potentially Necessary & Quantifiable & Potentially Viable \\
         & \textcolor{blue!60!black}{Int'l Alliance Proximity} & Potentially Necessary & Quantifiable & Potentially Viable \\
@@ -58,7 +94,7 @@ These are potential options for data that would be used in indicating the flow o
     \end{tabular}
 \end{table}
 
-\section{Datasets (Preliminary)}
+\section{Datasets (Preliminary)}\label{sec:data}
 
 \begin{description}
     \item[IMF World Economic Outlook (WEO):] ``The World Economic Outlook
@@ -73,7 +109,7 @@ These are potential options for data that would be used in indicating the flow o
             \href{https://www.untourism.int/tourism-statistics/tourism-statistics-database}{UN Tourism Database}
 \end{description}
 
-\section{Potential Needs}
+\section{Potential Needs}\label{sec:needs}
 
 There is the possibility of needing to \textit{create} a database that has the exchange rates of currencies
 between all countries (top 100 countries by GDP). This would allow for greater expansion of seeing which countries are doing well
@@ -84,5 +120,14 @@ Americans are either moving to or touring Japan.
 
 Having an expansive database that is able to catalogue exchange rates between countries that is not dollar (\$) centric 
 would allow for drawing broader conclusions across the world.
+
+Technically, this would be done within something akin to how Google Translate works: To get better translations (exchange rates) without
+exponentially increasing space complexity, there needs to be a `third' language (currency) in the mixed. If you wanted to translate from 
+Madarin to English (Yuan to USD), there needs to be a third language that only the model database/model would know that can do the 
+communication for you. Instead of storing every exchange rate between every country and updating that consistently, there would be a third
+currency in each equation that would be say `1 Yuan is worth X amount of inter-currency currency (ICC), and 1 Dollar is worth X amount of ICC,
+therefore the exchange rate is Y'.
+
+\bibliography{sources}
 
 \end{document}
