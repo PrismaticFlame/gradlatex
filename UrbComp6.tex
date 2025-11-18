@@ -10,6 +10,39 @@
 
 \section{Mathematical Relationship}
 
+Finding the relationship between the I-curve and the $R_0$ value requires taking the SIR model equation of the rate of change of I w.r.t time and adding the $R_0$ equation into the mix
+
+\begin{align}
+    \frac{dI}{dt} = \beta S I - \gamma I \quad
+    & R_0 = \frac{\beta}{\gamma} \cdot N \\
+    \frac{dI}{dt} = \beta S I - \gamma I \quad
+    & \beta = \frac{R_0 \gamma}{N}
+\end{align}
+
+where $S$ is `susceptible', $I$ is infected, $\beta$ is the transmission rate, $\gamma$ is the recovery rate, and $N$ is the total population size.
+
+After getting the $R_0$ equation in terms of $\beta$, we can substitute that into our SIR model equation and find the relationship.
+
+\begin{align}
+    \frac{dI}{dt} =& \bigl(\frac{R_0 \gamma}{N}\bigr) S I - \gamma I
+\end{align}
+
+\begin{equation}
+    \boxed{\frac{dI}{dt} = \gamma I \bigl( \frac{R_0 S}{N} - 1 \bigr)}
+\end{equation}
+
+This equation reveals the relationship between the I curve and $R_0$. The term $\frac{R_0 S}{N}$ represents
+the effective reproduction number, $R_{\text{eff}}$ or $R(t)$, which decreases over time as susceptible people become infected.
+
+\textbf{Early in the epidemic ($S \approx N$)}: $R_{\text{eff}} \approx R_0 > 1$, so $\frac{dI}{dt} > 0$ and infections rise exponentially. 
+The larger $R_0$ is, the faster this initial growth.
+
+\textbf{At the peak ($S = N / R_0$)}: $R_{\text{eff}} = 1$, so $\frac{dI}{dt} = 0$ and infections stop increasing. Note that this occurs 
+when only $\frac{1}{R_0}$ of the population remains susceptible.
+
+\textbf{After the peak ($S < N/R_0$)}: $R_{\text{eff}} < 1$, so $\frac{dI}{dt} < 0$ and infections decline steeply as there aren't enough 
+susceptibles left to sustain transmission.
+
 \section{Influenza Outbreak}
 
 \subsection{Compartmental SEIR Model Update}
@@ -19,38 +52,41 @@
 \section{Epidemiological Models}
 
 \begin{figure}[H]
-    \begin{minipage}{.48\textwidth}
-        \subsection{Individuals can recover?}
-
-        \textbf{SIR, SIRS, SEIR.} These models that include \textbf{R}, or Recovery, in them indicate that Individuals can recover. Not necessarily forever, but they can recover.
-
-        \subsection{Permanent Immunity?}
-
-        \textbf{SIR, SEIR}. These models that end with Recovery indicate that once an indiviudal recovers, they will not be sick again and will have permanent immunity to that infection.
-
-        \subsection{Repeated Infections?}
-
-        \textbf{SIS, SIRS}. These models that end with \textbf{S}, or Susceptible, indicate that individuals will either become infected again or lose their immunity to the infection after recovery.
-
-    \end{minipage} %
-    \begin{minipage}{.48\textwidth}
+    \centering
+    \begin{tabularx}{\textwidth}{@{}XX@{}}
+        \subsection{Individuals Can Recover?}
+        \textbf{Models: SIR, SIRS, SEIR}
+        
+        Models that include \textbf{R} (Recovery) indicate that individuals can recover from infection, though not necessarily with permanent immunity.
+        &
         \subsection{Monotonically Decreasing Susceptibility?}
-
-        \textbf{SI, SIR, SEIR}. What determines the monotonically decreasing susceptible category is if inidividuals can return to the susceptible category or not. 
-        These three models end do have indicate that individuals will return to the \textbf{S} category again, meaning that S will only ever decrease over time.
-
+        \textbf{Models: SI, SIR, SEIR}
+        
+        These models feature monotonically decreasing susceptibility because individuals do not return to the \textbf{S} category. Once removed from the susceptible population, they remain permanently infected or recovered.
+        \\[2em]
+        
+        \subsection{Permanent Immunity?}
+        \textbf{Models: SIR, SEIR}
+        
+        Models that end with Recovery indicate that once an individual recovers, they acquire permanent immunity and will not become infected again.
+        &
         \subsection{Equilibrium?}
-
-        \textbf{SIS, SIRS}. Along the same line of thinking as in the previous question, the only way there can be an  equilibrium between
-        \textbf{S} and \textbf{I} is if individuals can return to the susceptible category. Since individuals do return to susceptible with these models,
-        there can be an equilibrium between the \textbf{S} and \textbf{I} category.
-
+        \textbf{Models: SIS, SIRS}
+        
+        Equilibrium between \textbf{S} and \textbf{I} is only possible when individuals can return to the susceptible category. These models allow such transitions, enabling a stable endemic state.
+        \\[2em]
+        
+        \subsection{Repeated Infections?}
+        \textbf{Models: SIS, SIRS}
+        
+        Models that end with \textbf{S} (Susceptible) indicate that individuals will either become infected again or lose their immunity after recovery, returning to the susceptible state.
+        &
         \subsection{Natural Decline of Infection?}
-
-        \textbf{SIR, SEIR, SI}. These models conclude with individuals recovering, meaning that (baring new additions or new births), the S category will never
-        increase and therefore the infection will end at some point. However, the \textbf{SI} model could be included because the
-        model ends with everyone being infected, which then comes to a point of interpretation: If everyone is infected, is \textit{anyone} infected?
-    \end{minipage}
+        \textbf{Models: SIR, SEIR, SI}
+        
+        These models feature natural infection decline. In SIR and SEIR, individuals recover and the infection eventually ends. The SI model is debatable: while everyone becomes infected, one could argue that if everyone is infected, no one is truly ``infected'' in a meaningful sense.
+        \\
+    \end{tabularx}
 \end{figure}
 
 \section{Ebola and COVID-19 Paper Review}
