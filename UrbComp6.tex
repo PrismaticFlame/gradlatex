@@ -47,9 +47,88 @@ susceptibles left to sustain transmission.
 
 \subsection{Compartmental SEIR Model Update}
 
+To give insight into how the outbreak will unfold around schools, we will split the population into two: open and closed schools.
+\begin{itemize}
+    \item \textbf{Open schools} (subscript `O'): $S_o, E_o, I_o, R_o$
+    \item \textbf{Closed schools} (subscript `C'): $S_c, E_c, I_c, R_c$
+\end{itemize}
 
+Then, from these new variables as part of the SEIR compartmental model, we can create new equations for these models in their respective populations.
+
+
+\begin{figure}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{@{}XX@{}}
+        \subsection*{Open schools} &
+        \subsection*{Closed schools} \\[1ex]
+        %
+        $\begin{aligned}
+            \frac{dS_o}{dt} &= -\beta_{oo}S_o I_o - \beta_{oc} S_o I_c \\
+            \frac{dE_o}{dt} &= \beta_{oo} S_o I_o + \beta_{oc} S_o I_c - \sigma E_o \\
+            \frac{dI_o}{dt} &= \sigma E_o - \gamma I_o \\
+            \frac{dR_o}{dt} &= \gamma I_o
+        \end{aligned}$ &
+        %
+        $\begin{aligned}
+            \frac{dS_c}{dt} &= -\beta_{co}S_c I_o - \beta_{cc} S_c I_c \\
+            \frac{dE_c}{dt} &= \beta_{co} S_c I_o + \beta_{cc} S_c I_c - \sigma E_c \\
+            \frac{dI_c}{dt} &= \sigma E_c - \gamma I_c \\
+            \frac{dR_c}{dt} &= \gamma I_c
+        \end{aligned}$
+    \end{tabularx}
+\end{figure}
+
+These updated models will allow us to compare the resulting curves that come from school closures and continuing to keep schools open, 
+and quantify the impact of school closures on reducing total infections. Some key things of note in this updated model is that I am accounting for
+``community'' infections. Kids won't infect susceptibles at school, but they may continue to interact at parks, grocery stores, in sports, etc.
+
+\begin{itemize}
+    \item $\beta_{oo}$: Transmission rate among open-school students (school + community).
+    \item $\beta_{cc}$: Transmission rate among closed-school students (community only).
+    \item $\beta_{co}$: Transmission rate from closed-school to open-school students (community mixing).
+    \item $\beta_{oc}$: Transmission rate from open-school to closed-school students (community mixing).
+\end{itemize}
+
+Something of note is that (I expect) $\beta_{oo} > \beta_{cc}$ because open school students would still be getting exposed
+to other students, whereas the closed school students would be getting far less exposure in school. Also it's worth mentioning that $\beta_{co} \approx \beta{oc}$ 
+as they are really measuring the same thing.
 
 \subsection{Agent-based SEIR Model Update}
+
+Keeping with the same idea as before, but applying it to individuals instead of entire `systems'. Each individual gets treated as an agent who has their own attributes:
+
+\begin{itemize}
+    \item \textbf{Category}: S, E, I, or R.
+    \item \textbf{School}: Open, Closed.
+    \item \textbf{Age group}: Student, Adult, Elderly.
+    \item \textbf{Location}: Which school, household, neighborhood.
+    \item \textbf{Contact Network}: List of other agents they interact with.
+\end{itemize}
+
+We would then construct a network of agents that all have this information stored with each agent. They also contain information on their 
+contacts from each place they visit (household, school, and community).
+
+This model would allow you to track individual-level outcomes and more accurately model the transmission of infection on an individual basis and with much 
+greater information like who, (probability of) when, and from whom. You would also inadvertently create a network graph of who knows who and who spends time with who, creating 
+heterogeneous contact patterns, and reveal clusterings (households, school cliques, community centers).
+
+I remember that when COVID-19 was around, I was in my final year of High School. When schools eventually closed I spent a large amount of my time indoors and online (mainly based on preference). 
+However, I had many friends that took the opportunity of `no more school' to spend time with friends outside of school at each others houses or outside in parks, increasing their social exposure. 
+So, we could also reasonably see some behavioral changes where certain contacts are reduced (because interactions between agents don't happen at school anymore) and increased interactions 
+with other agents (friends spending time together outside of school).
+
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cc}
+        \toprule
+        Compartmental Model & Agent-Based Model \\
+        \midrule
+        Quick insight into overall trends & Tracking of specific transmission chains \\
+        Overall trend tracking & Targeted interventions \\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \section{Epidemiological Models}
 
