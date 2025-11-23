@@ -30,37 +30,206 @@
     \label{fig:Q2_P1}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/HW8-Q2_P2.pdf}
     \label{fig:Q2_P2}
 \end{figure}
 
+For the given observation: \{Outlook=sunny, Temp=cool, Humidity=high, Wind=strong\}, 
+the decision tree process follows the blue line. The prediction ends up being a `No' on `Play Tennis'.
+
 \section{Play Tennis? $\rightarrow$ Gini}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/HW8-Q3_P1.pdf}
     \label{fig:Q3_P1}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{images/HW8-Q3_P2.pdf}
     \label{fig:Q3_P2}
 \end{figure}
+
+For the given observation: \{Outlook=sunny, Temp=cool, Humidity=high, Wind=strong\}, 
+the decision tree process follows the blue line which is the same as from the previous question. The prediction ends up being a `No' on `Play Tennis'.
+
 
 \section*{Phase II}
 \noindent\rule{17cm}{0.4pt}
 
 \section{No-Pruning}
 
+The accuracy score of the train and test set of the unpruned decision tree were:
+
+\begin{lstlisting}
+The model shows a training accuracy of 100.00% and a test accuracy 
+of 64.86%.
+\end{lstlisting}
+
+This shows exactly what we expect: An unpruned decision tree will attempt to split on every single feature and learn on noise.
+The training accuracy is incredibly high because it essentially memorized the training data, but performed rather poorly on the test data because it can't generalize.
+
+Here are the parameter values of the tree after training:
+\begin{lstlisting}
+============================================================
+DECISION TREE PARAMETERS AFTER TRAINING
+============================================================
+ccp_alpha                     : 0.0
+class_weight                  : None
+criterion                     : gini
+max_depth                     : None
+max_features                  : None
+max_leaf_nodes                : None
+min_impurity_decrease         : 0.0
+min_samples_leaf              : 1
+min_samples_split             : 2
+min_weight_fraction_leaf      : 0.0
+monotonic_cst                 : None
+random_state                  : 5805
+splitter                      : best
+Number of features: 5
+Feature names: ['pclass' 'age' 'sibsp' 'parch' 'fare']
+Number of classes: 2
+Classes: [0 1]
+Tree depth: 12
+Number of leaves: 47
+\end{lstlisting}
+
+And here is the graph of the decision tree using sklearn.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/decision_tree_titanic.png}
+    \caption{Un-pruned Decision Tree}
+    \label{fig:unprunedtree}
+\end{figure}
+
+As is easy to tell, the tree is rather messy and is learning on all the noise of the dataset.
+
 \section{Pre-Pruning}
+
+Firstly, here are the parameters of the best pruned model:
+\begin{lstlisting}
+ALL PARAMETERS OF THE BEST (PRUNED) MODEL
+ccp_alpha                     : 0.0
+class_weight                  : None
+criterion                     : gini
+max_depth                     : 5
+max_features                  : sqrt
+max_leaf_nodes                : None
+min_impurity_decrease         : 0.0
+min_samples_leaf              : 10
+min_samples_split             : 20
+min_weight_fraction_leaf      : 0.0
+monotonic_cst                 : None
+random_state                  : 5805
+splitter                      : best
+\end{lstlisting}
+
+Next, the plotted `Pruned Decision Tree'.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/pruned_decision_tree.png}
+    \caption{Pruned Decision Tree}
+    \label{fig:prunedtree}
+\end{figure}
+
+As is easy to tell, the tree is much more readable. And here is the training and test accuracy on y.
+
+\begin{lstlisting}
+Training Accuracy: 0.7517 (75.17%)
+Test Accuracy: 0.7027 (70.27%)
+\end{lstlisting}
+
+The pre-pruning of the tree did improve performance. This pre-pruning is used to avoid overfitting so that the tree
+does not learn/fit to the noise in the dataset and becomes more generalizable. This tree also only has 5 levels instead of the unreadable 12 in the un-pruned tree.
 
 \section{Post-Pruning}
 
+Firstly, the plot of the accuracy score of the train and test set.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/question6_accuracy_vs_alpha.png}
+    \caption{Accuracy Score of Test vs. Train Sets}
+    \label{fig:q6acc}
+\end{figure}
+
+Next, the optimum alpha that was determined:
+\begin{lstlisting}
+Optimal Alpha (ccp_alpha): 0.00509754
+\end{lstlisting}
+
+Finally, the post-pruned decision tree.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/post_pruned_decision_tree.png}
+    \caption{Post-Pruning Decision Tree}
+    \label{fig:postprunedt}
+\end{figure}
+
+A few stats worth mentioning:
+
+\begin{lstlisting}
+COMPARISON: POST-PRUNED vs UNPRUNED TREE
+-----------------------------------------
+Test Accuracy Change: +0.04%
+Overfitting Gap Reduction: 0.26 percentage points
+Tree Depth Reduction: 12 - 6 
+                      (6 levels removed)
+Leaves Reduction: 47 - 9 
+                  (38 leaves pruned)
+
+COMPARISON: POST-PRUNED vs PRE-PRUNED TREE
+-------------------------------------------
+Test Accuracy Change: +2.79%
+Overfitting Gap Change: +0.83 percentage points
+Tree Depth Comparison: 3 (pre) vs 6 (post)
+Leaves Comparison: 8 (pre) vs 9 (post)
+\end{lstlisting}
+
+The post-pruning method is far better than the unpruned tree, and provides a slight accuracy boost over the pre-pruned tree. 
+The reason that we post-prune is that it is better in terms of accuracy and simplifies the tree, however it is far more cost expensive than
+pre-pruning and no-pruning, so the trade off must be taken into account.
+
 \section{Logistic Regression}
 
+As is required in the homework document, here are the training and test accuracy scores for the Logistic Regression (LR) model:
+
+\begin{lstlisting}
+Training Accuracy: 0.7517 (75.17%)
+Test Accuracy: 0.7027 (70.27%)
+\end{lstlisting}
+
 \section{Final Classifier Selection}
+
+Here is a comprehensive image showing the metrics of the different classifiers, a graph with the different classifiers and their AUC as the legend.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/comprehensive_classifier_comparison.png}
+    \caption{Comprehensive Classifier Comparison}
+    \label{fig:compclass}
+\end{figure}
+
+And the confusion matrices for the three models
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/confusion_matrices_comparison.png}
+    \caption{Confusion Matrices of Models}
+    \label{fig:cm_s}
+\end{figure}
+
+For this problem, there is two potential answers: the Post-pruned Decision Tree and the Pre-pruned Decision Tree. The post-pruned D.T. has the highest accuracy, precision, F1, and AUC score of the models. 
+So this model performs best overall. However, in this particular case, recall plays a very important role in this where we want to accurately identify survivors, or catch all positives. For this metric, the Pre-pruned D.T. 
+is best.
+
+However, for the best generalization and overall performance, it would be best to use the Post-pruned D.T.
 
 \end{document}
