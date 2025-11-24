@@ -1,0 +1,111 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+% Set up document metadata
+\setauthors{Tzu-Chen Chiu, Arjun Sivakumar, Mara Schimmel, Christopher Williams}
+\setheaderauthors{Chiu, Sivakumar, Schimmel, Williams}
+\settitle{Sprint 2 Report}
+\setclass{IPD}
+
+\begin{document}
+
+\maketitlepage
+
+\section{Original Sprint 2 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_backlog.png}
+    \caption{Sprint 2 Backlog}
+\end{figure}
+
+\section{Sprint 2 Backlog - End of Sprint Status}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_backlog_updated.png}
+    \caption{Spring 2 Backlog - Updated}
+    \label{fig:sprint2updated}
+\end{figure}
+
+\section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage task.
+
+\section{Sprint Retrospective}
+
+\subsection*{Mara}
+
+I initially struggled to figure out what data specifically was desired for the analog readout wrapper, but after some research I was to figure out which data 
+to gather. Using pseudocode provided by our mentor, I got the measurement data, and ended up with hard and soft data for the pure detectors, pure measurements, 
+and detectors gathered from the measurements. With multiple statistic data points, I believe I have accomplished my task for this sprint.
+
+\subsection*{Chris}
+
+This sprint I read up on and studied `Block Recurrent Transformers' (BRT) which are part of Google's Recurrent Transformer based Nueral Network. Believing that the 
+I learned that the BRT is not the entirety of Google's architecture, so I did not fully complete the pipeline for this sprint and must continue work on this task.
+I was able to show a working prototype of a BRT that can predict the weather temperature of an area given 48 hours of history, showcasing a proof of concept that 
+we have a model that is able to learn sequence information (temperature changing over time) and that it will be useful going forward in our project.
+
+\subsection*{Tzu-Chen}
+
+I self-studied the structure of Transformers before I started to design the hard-input embedding. However, it is still difficult to adapt a standard Transformer, 
+which is usually used for sentences or images, to the quantum-decoding use. Fortunately, there is an existing framework, PyTorch, that we can apply. It can do 
+gradient descent automatically, so I don’t need to do derivatives by myself. The vectorized hard input seems to be working at this stage, so next I will study 
+how to vectorize the soft input using Gaussian readout. I expect that we will need a multi-head model to handle this more complicated 2D input.
+
+\subsection*{Arjun}
+
+During this sprint, I completed all the tasks assigned to me for this release. The MWPM baseline error-correction work—partially built in the previous 
+sprint—was finalized by cleaning and streamlining the evaluation pipeline. I also helped in developing the embedding scheme for our transformer decoder, 
+collaborating closely with Tzu-Chen to resolve challenges in converting detector events and labels into vectorized, tokenized inputs suitable for model training. 
+This required several coordination meetings but improved our team’s workflow and technical clarity. Additionally, I successfully connected to the ARC compute 
+cluster, addressed allocation and setup hurdles, and began running model experiments on the GPUs. Overall, the sprint went smoothly with no major blockers, 
+and strong teamwork helped resolve the few technical and integration issues that arose.
+
+\section{Product Backlog (Updated)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_updated_product_backlog.png}
+    \caption{Updated Product Backlog}
+\end{figure}
+
+\begin{aside}{Picture Quality}
+    We understand that this image is hard to read, but as Figure \ref{fig:sprint2updated} shows, tasks 
+    3.1, 3.2, 1.7, 1.8, and 1.9 were finished while tasks 1.9 and 1.10 are still being worked on.
+\end{aside}
+
+\section{Issue Tracking}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Completed} \\ \midrule
+Analog Readout Wrapper & Configuring wrapper to output soft data & Completed & 11/21/2025 \\
+AlphaQubit Structure & Learning AlpahQubit's structure & Completed & 11/17/2025 \\
+Decoder & Implement MWPM into decoder code & Complete & 11/18/2025 \\
+Connecting to ARC & Creating account \& connect to ARC & Completed & 11/16/2025 \\
+Transformers & Learning how the heck a transformer works & In Progress & --- \\ \bottomrule
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
+\section{Sprint 3 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_backlog.png}
+    \caption{Spring 3 Backlog}
+\end{figure}
+
+\section{Member Videos}
+
+Group member videos are uploaded in the `My Media' of their Canvas accounts or linked below.
+
+\textbf{Tzu-Chen/Jessica}: \href{https://virginiatech-my.sharepoint.com/:v:/r/personal/tzuchen_vt_edu/Documents/Attachments/TzuChen.mov?csf=1&web=1&e=YfhfV9&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D}{Video}
+
+
+
+\end{document}
