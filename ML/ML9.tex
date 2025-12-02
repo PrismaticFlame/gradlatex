@@ -1,0 +1,74 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+\setclass{\MLONE}
+\settitle{Homework 9}
+
+\begin{document}
+
+\maketitlepage
+
+\section{Estimating Probabilities (1)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/ML9_q1.jpeg}
+\end{figure}
+
+\section{Naïve Beyes Approach (1)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/ML9_q2.jpeg}
+\end{figure}
+
+\section{Estimating Probabilities w/ Laplace Smoothing}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/ML9_q3.jpeg}
+\end{figure}
+
+\section{Naïve Beyes Approach (2)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/ML9_q4.jpg}
+\end{figure}
+
+\section{Comparison of 2 and 4}
+
+Estimating probabilities with Laplace Smoothing is better. Laplace smoothing prevents a `0 term' from destroying or completely altering
+the outcome like in Question 2, when estimating the posterior of $P(- | vals) \propto \frac{3}{5} \cdot \frac{2}{5} \cdot \frac{0}{5} \cdot \frac{5}{10} = 0$. That
+single 0 term made the model predict with 100\% that the sample was `+' when in reality it should have been `-'.
+
+With Laplace Smoothing, $P(- | vals) \propto \frac{3}{9} \cdot \frac{2}{9} \cdot \frac{0}{9} \cdot \frac{5}{10} = 0.526$, which allows the model
+to properly compare both classes. In general, Laplace smoothing allows unseen feature-class combinations don't receive zero probability.
+
+\section{Estimating Probabilities (2)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/ML9_q6.jpeg}
+\end{figure}
+
+\section{Naïve Beyes Approach (3)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/ML9_q7.jpeg}
+\end{figure}
+
+\section{Bayesian Network}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/ML9_q8_1.jpeg}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/ML9_q8_2.jpeg}
+\end{figure}
+
+\end{document}
