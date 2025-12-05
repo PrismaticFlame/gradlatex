@@ -27,11 +27,9 @@ the severity of these accidents and their resultant injuries to develop effectiv
 casualties. This paper shows the results of using machine learning models, including Logistic Regression, Random Forest, Nueral Network,
 SVM, and more, to predict the severity of injury from a car crash based on certain factors. Utilizing data across 12 years (2013 - 2025, N = 209,306)
 from various regions to develop and compare several models performance. The results show that Logistic Regression returned an $R^2$ of 0.105 
-with the target variable total injuries whereas the Random Forest model achieved an $R^2$ of 0.54 and an F1 of 0.60. During Phase I of the
-project, through a Random Forest analysis showed that the most important features were Is Rush Hour, First Crash Type: Pedestrian, Number of units (number of cars invovled), 
-Lighting Condition: Daylight, and Roadway Surface Condition: Wet to be the most important features that explained the greatest amount of the variance. 
-The Random Forest model did not perform as well as hoped due to a lack of helpful information in the dataset like Age of vehicle, Age of driver, impact speed, 
-or Make of Vehicle.
+with the target variable total injuries whereas the Random Forest model achieved an Accuracy of 0.74 and an F1 of 0.74. During Phase I of the
+project, Random Forest analysis showed that the most important features were first\_crash\_type, damage, prim\_contributory\_cause, num\_units, and 
+failure\_to\_obey to be the most important features that explained the greatest amount of the variance. 
 
 \section{Introduction}
 
@@ -74,10 +72,10 @@ the analysis; and supporting Python code is included in the appendix.
 
 \section{Description of the Dataset}
 
-The dataset contains comprehensive information about traffic crashes that occurred within various areas, encompassing a wide range of variables 
-related to crash characteristics, environmental conditions, and injury outcomes. The dataset consists of 209,306 records (after removing one 
-duplicate entry from the original 209,307 records) and 24 features, making it a robust and substantial real-world dataset suitable for machine 
-learning analysis.
+The dataset contains information about traffic crashes that occurred within various areas, encompassing a wide range of variables 
+related to crash characteristics, environmental conditions, and injury outcomes. The dataset consists of 209,275 records (after removing 
+31 duplicates from the original 209,306 records) and 24 features, making it a robust and substantial real-world dataset suitable for machine 
+learning analysis. 
 
 \section{Phase I}
 
