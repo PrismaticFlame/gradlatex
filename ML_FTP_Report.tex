@@ -25,7 +25,7 @@
 Traffic accidents in the modern day are one of the biggest contributors to medical bills and deaths in the world. Predicting 
 the severity of these accidents and their resultant injuries to develop effective road safety measures could lead to a reduction in
 casualties. This paper shows the results of using machine learning models, including Logistic Regression, Random Forest, Nueral Network,
-SVM, and more, to predict the severity of injury from a car crash based on certain factors. Utilizing data across 12 years (2013 - 2025, N = 209,275)
+SVM, and more, to predict the severity of injury from a car crash based on certain factors. Utilizing data across 12 years (2013 - 2025, N = 209,306)
 from various regions to develop and compare several models performance. The results show that Logistic Regression returned an $R^2$ of 0.105 
 with the target variable total injuries whereas the Random Forest model achieved an $R^2$ of 0.54 and an F1 of 0.60. During Phase I of the
 project, through a Random Forest analysis showed that the most important features were Is Rush Hour, First Crash Type: Pedestrian, Number of units (number of cars invovled), 
@@ -35,7 +35,49 @@ or Make of Vehicle.
 
 \section{Introduction}
 
+Traffic accidents represent a significant public safety concern, resulting in injuries, fatalities, and substantial economic costs. Understanding 
+the factors that contribute to accident severity is crucial for developing effective prevention strategies and improving emergency response protocols.
+This project applies comprehensive machine learning techniques to analyze traffic accident data from various regions, with the objective of predicting 
+injury severity and identifying key contributing factors.
+
+The primary goal of this Final Term Project (FTP) is to obtain practical experience with feature engineering, classification, regression, clustering, and 
+association rule mining by applying various machine learning algorithms to a large dataset. Specifically, this analysis aims to classify traffic accidents 
+based on injury severity levels and predict the total number of injuries resulting from crashes, while identifying patterns and relationships within the accident data. 
+This project follows a systematic four-phase approach to achieve comprehensive analysis of the traffic accidents dataset: 
+
+\textbf{Phase I: Feature Engineering \& Exploratory Data Analysis (EDA)}. This phase focuses on data preprocessing, including handling missing values, removing duplicates, 
+and addressing class imbalance in injury severity categories. Dimensionality reduction techniques such as Random Forest feature importance, Principal Component Analysis (PCA),
+Singular Value Decomposition (SVD) analysis, and Linear Discriminant Analysis (LDA) are employed to identify the most relevant features. Feature engineering includes creating 
+derived variables such as rush hour indicators and failure to yield to signage indicators to enhance predictive capabilities.
+
+\textbf{Phase II: Regression Analysis}. This phase develops a multiple linear regression model to predict the continuous numerical variable 
+injuries\_total. The analysis incorporates statistical tests (T-test and F-test), confidence interval analysis, and stepwise regression
+to identify the optimal set of predictors. Model performance is evaluated using $R^2$, Adjusted $R^2$, AIC, BIC, and MSE metrics.
+
+\textbf{Phase III: Classification Analysis}. This phase represents the core of the project, where multiple machine learning classifiers are 
+trained and evaluated to predict the categorical target variable most\_severe\_injury, which represents a five-class classification 
+problem (Fatal, Incapacitating Injury, Nonincapacitating Injury, Reported Not Evident, and No Indication of Injury). Eight different classification
+algorithms are implemented, including Linear Discriminant Analysis (LDA), Decision Trees, Logistic Regression, K-Nearest Neighbors (KNN), 
+Support Vector Machines (SVM), Naive Bayes, Random Forest with ensemble methods, and Neural Networks. Grid search hyperparameter optimization 
+is performed for each classifier, and performance is evaluated using confusion matrices, precision, recall, specificity, F-score, ROC curves, 
+AUC scores, and stratified K-fold cross-validation.
+
+\textbf{Phase IV: Clustering and Association Rule Mining}. This independent research phase applies unsupervised learning techniques to discover
+patterns and relationships within the accident data. K-means clustering with silhouette analysis, DBSCAN for density-based clustering, and 
+Apriori algorithm for association rule mining are utilized to extract meaningful insights about accident characteristics and contributing factors.
+
+The ultimate objective of this project is to recommend the best-performing classifier for predicting traffic accident injury severity, providing 
+actionable insights that can inform traffic safety policies, resource allocation for emergency services, and preventive measures to reduce 
+accident-related injuries and fatalities. This report is organized as follows: Section 2 provides a detailed description of the traffic accidents 
+dataset; Sections 3-6 present the methodology and results for each of the four phases; Section 7 offers recommendations and conclusions based on 
+the analysis; and supporting Python code is included in the appendix.
+
 \section{Description of the Dataset}
+
+The dataset contains comprehensive information about traffic crashes that occurred within various areas, encompassing a wide range of variables 
+related to crash characteristics, environmental conditions, and injury outcomes. The dataset consists of 209,306 records (after removing one 
+duplicate entry from the original 209,307 records) and 24 features, making it a robust and substantial real-world dataset suitable for machine 
+learning analysis.
 
 \section{Phase I}
 
