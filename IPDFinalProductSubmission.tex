@@ -11,4 +11,113 @@
 
 \maketitlepage
 
+\section{Product Description}
+
+\textbf{Background}: Google has published work that details their use of Google's DeepMind machine learning knowledge and Google Quantum AI's error correction expertise to create Google's AlphaQubit.
+
+\textbf{Description}: Reproduce Google's AlphaQubit and create a Recurrent Transformer-based Neural Network for Quantum Error Correction. 
+
+\section{Design}
+
+Our core model is aiming to replicate AlphaQubit's architecture. It is designed to learn temporal and spatial correlations in syndrome data across multiple rounds of error corretion.
+
+\textbf{Model Iputs and Embeddings}: For each shot, we treat the sequence of stabilizer measurements over time as a sequence-like input:
+
+\begin{itemize}
+    \item \textbf{Syndrome}: Values (hard 0/1 or soft analog) are first project into a d\_model dimensional embedding using a linear layer.
+    \item \textbf{Stab\_id} and \textbf{Cycle\_id} are converted into learnable embeddings:
+    \begin{itemize}
+        \item \textbf{stab\_id} encodes \textit{which stabilizer} generated the syndrome
+        \item \textbf{cycle\_id} encodes \textit{which round} of the error-correction cycle produced that measurement
+    \end{itemize}
+\end{itemize}
+
+These embeddings are combined (e.g., summed or concatenated + projected) to form a per-site feature vector of dimension d\_model. The full sequence is then processed by transformer encoder layers.
+
+\subsection*{Transformer Architecture}
+
+\begin{itemize}
+    \item We use \textbf{binary cross-entropy with logits (BCEWithLogitsLoss)} to train the model to predict the logical error label for each shot.
+    \item Optimization is performed using \textbf{AdamW} with:
+    \begin{itemize}
+        \item Learning rate $1e-3$
+        \item Weight decay $1e-5$
+    \end{itemize}
+\end{itemize}
+
+These hyperparameters are standard for transformer training and were validated by monitoring training/validation loss and the Logical Error Rate (LER) across epochs.
+
+\subsection*{Training, Validation, LER}
+
+We split the dataset into training and validation sets (e.g., 80\% / 20\%) and use PyTorch's DataLoader for mini-batch training.
+
+\begin{itemize}
+    \item \textbf{During training}: The model minimizes BCE loss on the training set.
+    \item \textbf{During validation}: We evaluate both validation loss and validation LER.
+\end{itemize}
+
+LER is computed by:
+
+\begin{enumerate}
+    \item Applying a sigmoid to the model's logits to get probabilites.
+    \item Thresholding at 0.5 to get binary predictions.
+    \item Comparing predictions with the true labels and averaging the mismatch rate.
+\end{enumerate}
+
+We save the model-checkpoint with the lowest validation LER to ensure that the selected model is optimized for decoding performance, not just classification loss.
+
+In our current experiments on a distance-3 surface code with soft measurement data, the learned decoder achieves an LER of about 3\%, 
+while the classical baseline MWPM achieves roughly 0.3\%, which serves as a reference point and validates our pipeline.
+
+\section{Ethical Implications}
+
+Due to the fact that we are potentially aiding in the development of cryptographic breaking through quantum computers, there may be an impact on the classical 
+cryptography scene using the power of quantum computers. This may impact consumer privacy by allowing vastly more efficient decryption of encrypted data, 
+as well as governments or financial institutions. 
+
+We are not generating a specific product, rather the technology for decryption. 
+Therefore, it is difficult to effectively minimize the negative consequences to different groups, as we do not have much say in its potential 
+future uses, nor its reach after it enters the public. 
+
+In terms of biases, there are a few to account for, which will be handled to the best of our abilities. We will use publicly available data, 
+or generate our own quantum codes using publicly available simulators. Another potential bias to account for is the model we are basing our 
+project on which is used for the surface code, while our project aims to work with codes other than the surface code [2]. This means that we 
+may not be able to achieve our secondary goal, which is to adapt the program for other codes.
+
+\section{Current MVP and Stretch Goals}
+
+The MVP for this semester was to begin training the Transformer model, as well as implement a small Minimum Weight Perfect Matching (MWPM) 
+code for comparison and data. The stretch goal for this semester was to fully train the model to be comparable to Google’s model [2]. 
+We successfully began training the transformer model, in addition to generating a small surface code. We also managed to generate graphs 
+comparing physical error rate vs logical error rate and logical error rate for each distance (3, 5, 7, 9), for both the MWPM and Transformer 
+model. Although we did hit or MVP for this semester of constructing a transformer model and implementing the MWPM baseline algorithm, we 
+were not able to hit out stretch goals as our evaluation and results of the transformer model that we built indicate it does not perform 
+as well as Google’s AlphaQubit
+
+\section{Product Functionalities}
+
+Using screen shots, showcase the functionalities of your product and walk a user through the experience of working or using your product. This should be for this semester
+
+\section{Semester 2 Sprint 1 Backlog}
+
+For this semester, one of the things that went well was gaining a fundamental knowledge and basic understanding of the quantum computing, 
+and quantum error detection solutions.This was a really important achievement as the material is quite dense and new for many of us, 
+and it was important to have that fundamental knowledge before going ahead and implementing a neural network error correction algorithm. 
+Other things that went well include our consistent team work and regular meetings with our mentor from Northrop Grumman, which really 
+helped keep us on track for the project and break down the larger goal into smaller, simpler and achievable tasks. Ultimately, we 
+also achieved our MVP goal of building a transformer decoder for this semester. Things that can be improved are focusing more on 
+learning about neural network architectures, and how to best build a recurrent transformer network that can achieve comparable 
+model performance to Google’s Alpha Qubit. We also need to improve our model pipeline, which involves streamlining simulation and 
+evaluation processes, and improving code quality and structure. 
+
+\section{Semester 2 Gantt Chart - Week Level}
+
+\section{Author Document}
+
+\section{Project Repository}
+
+\section{90 Second Teaser Video}
+
+Submitted previously.
+
 \end{document}
