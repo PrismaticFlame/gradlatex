@@ -1,0 +1,134 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+% Set up document metadata
+\setauthors{Tzu-Chen Chiu, Arjun Sivakumar, Mara Schimmel, Christopher Williams}
+\setheaderauthors{Chiu, Sivakumar, Schimmel, Williams}
+\settitle{Sprint 3 Report}
+\setclass{IPD}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{important}{Sprint 3 Progress}
+    This sprint was not as progressive in terms of getting our sprint tasks done, as we were both 
+    working on completeing Finals, assignments, and projects as well as doing research for our project here. 
+    We were looking into Transformers, embedding schemes for our data, and more understanding of quantum 
+    computers and codes. Thank you for your understanding. 
+\end{important}
+
+\section{Original Sprint 3 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_backlog.png}
+    \caption{Spring 3 Backlog}
+\end{figure}
+
+\section{Sprint 3 Backlog - End of Sprint Status}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint_3_updated.png}
+    \caption{Spring 3 Backlog - Updated}
+    \label{fig:sprint3updated}
+\end{figure}
+
+\section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage tasks.
+
+\section{Sprint Retrospective}
+
+\subsection*{Mara}
+
+As this sprint was during the end of the semester and finals week, I was unable to dedicate as much 
+time as I would have preferred to this project and wasn't able to make progress during this sprint. Next 
+sprint I will have a renewed focus and drive to make significant progress on this project.
+
+\subsection*{Chris}
+
+This sprint was particularly lack luster in terms of progress and overall accomplishment because of 
+many deadlines and responsibilites in other classes. I am aware that this is not an acceptable mindset 
+or outcome, especially for working life. The reason I made the decision to tackle my sprint objectives 
+next sprint is in the fact that there is another sprint. The design of this project allows for us to 
+shift goals and deliverables around and the extension of this class track into two semesters presents an 
+opportunity like I had this semester to prioritize shorter term requirements and to look long term at what 
+I will have time to accomplish next semester.
+
+\subsection*{Tzu-Chen}
+
+We all recently gained access to ARC with Dr. Cameron’s assistance, 
+and we truly appreciate the support. Our team is currently 
+learning how to connect and use ARC effectively. There are many training 
+videos we are working through, including how to connect to the university 
+VPN, log in via SSH, and choose appropriate compute nodes so that we do 
+not overwhelm shared resources. We also appreciate Arjun for teaching 
+us the basics of using ARC.
+
+We have been developing a Transformer model based on Google’s design, 
+since the one we built is not working at all. I spent substantial time 
+studying how to implement the Lion optimizer, and now that I can run jobs 
+on ARC, I am able to obtain logical error rate (LER) results. We hope 
+to achieve improved performance in the next sprint.
+
+
+\subsection*{Arjun}
+
+During this sprint, we successfully integrated the major components developed across previous iterations, 
+including the MWPM decoder, Stim data simulation, the new embedding scheme, and our transformer model, 
+into a unified end-to-end pipeline. This system now runs both MWPM and transformer-based decoding on 
+simulated Stim datasets, applies the analog-conversion stage, computes logical error rates, and 
+generates performance graphs across varying physical error rates and code distances. We deployed and 
+executed the full workflow on the ARC cluster, producing the finalized results for the team. The 
+primary impediments involved merging independently developed modules into one cohesive pipeline and 
+coordinating with teammates to understand how their code sections were intended to function. 
+These were addressed through regular communication and reviewing each member’s demos. An 
+additional challenge was that Arjun was initially the only team member with ARC access, 
+requiring extra effort to run jobs and later help others onboard. From an ethical standpoint, 
+we ensured proper attribution when incorporating teammates’ code into the integrated pipeline. 
+Overall, the sprint went well, though future work could benefit from earlier cross-module 
+synchronization and shared access to compute resources.
+
+
+\section{Product Backlog (Updated)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_updated_product_backlog.png}
+    \caption{Updated Product Backlog}
+\end{figure}
+
+\begin{aside}{Picture Quality}
+    We understand that this image is hard to read, but as Figure \ref{fig:sprint3updated} shows, tasks 
+    1.11 was worked on.
+\end{aside}
+
+\section{Issue Tracking}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Completed} \\ \midrule
+ARC Access & Getting every member access to the ARC & 12/9/2025 \\
+Train on Stim Data & Getting reasonable results in training & Ongoing \\
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
+\section{Sprint 4 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint_4_backlog.png}
+    \caption{Spring 4 Backlog}
+\end{figure}
+
+\section{Member Videos}
+
+Members that did not have progress for this week do not have demo videos to submit. Otherwise, 
+videos will be posted on Canvas in the My Media section.
+
+\end{document}

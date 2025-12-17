@@ -1,0 +1,1759 @@
+\documentclass[stu,12pt,floatsintext]{apa7}
+\usepackage{styles/cwilliams-apa}
+\usepackage{enumitem}
+
+\title{Predicting Car Crash Injuries Using Every Machine Learning 
+Algorithm We Could Remember from Class (And Some We Googled at 3 AM) 
+Including But Not Limited To: Random Forests, Decision Trees, That 
+One SVM That Really Let Us Down, Neural Networks That Underperformed, 
+and K-Means Clustering That Just Kept Finding Two Clusters No Matter 
+What We Did, All While Wrestling with a Dataset That Refused to 
+Tell Us What Time the Crash Actually Happened or Where Exactly It 
+Occurred: A Tragicomic Tale of Feature Engineering, Hyperparameter 
+Tuning, and Accepting That 74\% Accuracy Might Just Be All We're 
+Getting}
+\shorttitle{Car Crash ML Project}
+
+\author{Christopher Williams}
+\authorsaffiliations{Virginia Tech}
+
+\course{5805: Machine Learning I}
+\professor{Dr.\ Reza Jefari}
+\duedate{December 4, 2025}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\section{Abstract}
+
+Traffic accidents in the modern day are one of the biggest contributors to medical bills and deaths in the world. Predicting 
+the severity of these accidents and their resultant injuries to develop effective road safety measures could lead to a reduction in
+casualties. This report shows the results of using machine learning models, including Logistic Regression, Random Forest, Nueral Network,
+SVM, and more, to predict the severity of injury from a car crash based on certain factors. Utilizing data across 13 years (2013 - 2025, N = 209,306)
+from various regions to develop and compare several models performance. The results show that Logistic Regression returned an $R^2$ of 0.06 
+with the target variable total injuries whereas the Random Forest model achieved an Accuracy of 0.74 and an F1 of 0.74. During Phase I of the
+project, Random Forest analysis showed that the most important features were first\_crash\_type, damage, prim\_contributory\_cause, num\_units, and 
+failure\_to\_obey to be the most important features that explained the greatest amount of the variance. 
+
+\section{Small Mention}
+
+This document is enormous and inflated in size because of three things: Many images, lots of enumerated lists, and line spacing. This document is 
+not a genuine 84 pages long. I apologize about the heart attack.
+
+\section{Introduction}
+
+\subsection{Background}
+
+Traffic accidents pose a critical public safety challenge, resulting in approximately 1.35 million deaths globally each year according to the World Health Organization. 
+In the United States alone, traffic crashes cost over \$340 billion annually in medical expenses, property damage, and lost productivity. 
+Understanding the factors that contribute to accident severity is crucial for developing effective prevention strategies and improving emergency response protocols. 
+This project applies comprehensive machine learning techniques to analyze traffic accident data from various regions, with the objective of predicting 
+injury severity and identifying key contributing factors.
+
+Despite advances in vehicle safety technology and traffic management systems, predicting crash outcome remains challenging due to the complex interplay of environmental conditions, 
+road characteristics, driver behavior, and vehicle factors. Machine learning offers powerful tools to uncover hidden patterns in large-scale accident datasets and build predictive models
+that can assist traffic safety officials and emergency services.
+
+\subsection{Project Phases}
+
+This project follows a four-phase approach to deliver comprehensive analysis on this problem.
+
+\textbf{Phase I: Feature Engineering \& Exploratory Data Analysis (EDA)}. This phase focuses on data preprocessing, including handling missing values, removing duplicates, 
+and label encoding categorical variables. Dimensionality reduction techniques including Random Forest feature importance, Principal Component Analysis (PCA), 
+Singular Value Decomposition (SVD), Variance Inflation Factor (VIF) analysis, and Linear Discriminant Analysis (LDA) are employed to identify relevant features and address 
+multicollinearity. Feature engineering creates derived variables such as \texttt{is\_rush\_hour}, \texttt{is\_weekend}, \texttt{is\_nighttime}, and \texttt{failure\_to\_obey} 
+to enhance predictive capabilities.
+
+\textbf{Phase II: Regression Analysis}. This phase develops multiple linear regression models to predict the continuous numerical variable \texttt{injuries\_total}. 
+The analysis incorporates statistical hypothesis testing (T-tests and F-tests), confidence interval analysis, and stepwise regression to identify optimal predictor sets. 
+Model performance is evaluated using $R^2$, Adjusted $R^2$, AIC, BIC, MSE, and RMSE metrics across various dimensionality reduction approaches.
+
+\textbf{Phase III: Classification Analysis}. This phase represents the core of the project, where ten machine learning classifiers are trained and evaluated to predict 
+the binary categorical target variable \texttt{crash\_type} (NO INJURY / DRIVE AWAY vs. INJURY AND / OR TOW DUE TO CRASH). Implemented algorithms include Linear Discriminant 
+Analysis (LDA), Decision Trees with pruning, Logistic Regression, K-Nearest Neighbors (KNN) with elbow method optimization, Support Vector Machines (SVM) with linear kernel, 
+Naive Bayes, Random Forest with bagging, Stacking Ensemble, AdaBoost, and Neural Networks (Multi-Layer Perceptron). Grid search hyperparameter optimization is performed for 
+each classifier, and performance is rigorously evaluated using confusion matrices, precision, recall, specificity, F1-score, ROC curves, AUC scores, and 5-fold stratified cross-validation.
+
+\textbf{Phase IV: Clustering and Association Rule Mining}. This independent research phase applies unsupervised learning techniques to discover patterns and relationships 
+within the accident data. K-Means and K-Means++ clustering with silhouette analysis, DBSCAN for density-based clustering, and Apriori algorithm for association rule mining 
+are utilized to extract meaningful insights about accident characteristics and contributing factors.
+
+The ultimate objective of this project is to recommend the best-performing classifier for predicting traffic accident injury severity, providing 
+actionable insights that can inform traffic safety policies, resource allocation for emergency services, and preventive measures to reduce 
+accident-related injuries and fatalities.
+
+\subsection{Report Organization}
+This report is organized as follows: Section 2 provides a detailed description of the traffic accidents dataset 
+and its characteristics. Sections 3-6 present the methodology, results, and observations for each of the four phases. Section 
+7 offers comprehensive recommendations, discusses limitations related to data granularity, and suggests future work. 
+Supporting Python code is included in the appendix and attached with this submission, and references are provided at the end. 
+
+\section{Description of the Dataset}
+
+\subsection{Data Source and Scope}
+
+The dataset contains comprehensive information about traffic crashes that occurred within various geographic regions from 2013 to 2025. The dataset 
+was collected from Kaggle and includes detailed records of crash characteristics, environmental conditions, road features, and injury outcomes.
+
+\subsection{Dataset Characteristics}
+
+The original dataset contains 209,306 crash records. After preprocessing to remove 31 duplicates, the final dataset contains \textbf{209,275 unique records} 
+with \textbf{24 features}, including:
+
+\begin{itemize}
+    \item \textbf{Temporal Features}: \texttt{crash\_date}, \texttt{crash\_hour}, \texttt{crash\_day\_of\_week}, \texttt{crash\_month}
+    \item \textbf{Categorical Features}: \texttt{traffic\_control\_device},	\texttt{weather\_condition}, \texttt{lighting\_condition}, \texttt{first\_crash\_type}, \texttt{trafficway\_type}, \texttt{alignment}, 
+    {roadway\_surface\_cond}, {road\_defect}, {crash\_type}, {intersection\_related\_i}, {damage}, {prim\_contributory\_cause}, \texttt{most\_severe\_injury}
+    \item \textbf{Numerical Features}: \texttt{injuries\_total}, \texttt{injuries\_fatal}, \texttt{injuries\_incapacitating}, \texttt{injuries\_non\_incapacitating}, \texttt{injuries\_reported\_not\_evident}, \texttt{injuries\_no\_indication}
+\end{itemize}
+
+\subsection{Feature Description}
+
+The dataset includes the following features:
+
+\textbf{Temporal Features:}
+\begin{itemize}
+    \item \texttt{crash\_date} - Date and time of the accident
+    \item \texttt{crash\_hour} - Hour of day (0-23) when crash occurred
+    \item \texttt{crash\_day\_of\_week} - Day of week (1=Sunday, 7=Saturday)
+    \item \texttt{crash\_month} - Month when crash occurred (1-12)
+\end{itemize}
+
+\textbf{Environmental Conditions:}
+\begin{itemize}
+    \item \texttt{weather\_condition}: Weather at time of crash (CLEAR: 78.7\%, RAIN: 10.4\%, CLOUDY: 3.6\%, SNOW: 3.3\%, OTHER: 4.0\%)
+    \item \texttt{lighting\_condition}: Lighting conditions (DAYLIGHT, DARKNESS, DARKNESS-LIGHTED ROAD, DUSK, DAWN)
+    \item \texttt{roadway\_surface\_cond}: Road surface condition (DRY, WET, SNOW/SLUSH, ICE)
+\end{itemize}
+
+\textbf{Road Characteristics:}
+\begin{itemize}
+    \item \texttt{traffic\_control\_device}: Type of traffic control present (TRAFFIC SIGNAL, STOP SIGN, NO CONTROLS, etc.)
+    \item \texttt{trafficway\_type}: Road configuration (FOUR WAY, T-INTERSECTION, NOT DIVIDED, etc.)
+    \item \texttt{alignment}: Road alignment (STRAIGHT AND LEVEL, CURVE, ON GRADE, etc.)
+    \item \texttt{road\_defect}: Road defects present (NO DEFECTS: 60.4\%, WORN SURFACE, RUT/HOLES, etc.)
+    \item \texttt{intersection\_related\_i}: Whether crash occurred at intersection (Y/N)
+\end{itemize}
+
+\textbf{Crash Characteristics:}
+\begin{itemize}
+    \item \texttt{first\_crash\_type}: Initial impact type (REAR END, ANGLE, TURNING, SIDESWIPE, FIXED OBJECT, HEAD ON, PEDESTRIAN, etc.)
+    \item \texttt{prim\_contributory\_cause}: Primary cause (FOLLOWING TOO CLOSELY, FAILING TO YIELD, SPEEDING, IMPROPER TURNING, etc.)
+    \item \texttt{num\_units}: Number of vehicles/units involved (mean: 2.1, range: 1-11)
+    \item \texttt{damage}: Property damage level (\$500 OR LESS, \$501-\$1,500, OVER \$1,500)
+\end{itemize}
+
+\textbf{Target Variables:}
+\begin{itemize}
+    \item \texttt{injuries\_total}: Total number of injuries (continuous, used for regression)
+    \item \texttt{crash\_type}: Binary crash severity Classification
+    \begin{itemize}
+        \item NO INJURY / DRIVE AWAY: 117,376 records (56.2\%)
+        \item INJURY AND / OR TOW DUE TO CRASH: 91930 (43.8\%)
+    \end{itemize}
+    \item \texttt{most\_severe\_injury}: Most severe injury in a crash (5 categories: NO INDICATION, REPORTED NOT EVIDENT, NONINCAPACITATING, INCAPACITATING, FATAL)
+\end{itemize}
+
+There are 3 target variables presented above but only 2 target variables were used (\texttt{injuries\_total} for regression, \texttt{crash\_type} for classification). 
+Originally, \texttt{most\_severe\_injury} was chosen as the classification target variable but was later decided that it did not produce good results due to data imbalance. 
+This will be discussed more later.
+
+\subsection{Data Quality and Preprocessing Requirements}
+
+The dataset exhibits several characteristics that require certain preprocessing:
+
+\begin{itemize}
+    \item \textbf{Class imbalance}: The \texttt{crash\_type} target shows imbalance (56.2\% vs 43.8\%)
+    \item \textbf{High cardinality}: Features like \texttt{prim\_contributory\_cause} (40+ categories) require smart encoding strategies
+    \item \textbf{Categorical dominance}: 19 of 24 features are categorical, necessitating label encoding or one-hot encoding
+    \item \textbf{Multicollinearity}: Related features (e.g., \texttt{injuries\_total} and injury breakdowns) require feature selection
+\end{itemize}
+
+\subsection{Data Granularity Limitations}
+
+A critical limitation of this dataset is insufficient granularity. Time of crashes was only recorded by the hour, not with minutes or seconds, as well as the 
+time of the crash not being clear on when it was recorded (when EMS arrived or when the crash actually took place or somewhere inbetween). Another large issue is that
+there is no spatial information in regards to the crashes. This could mean that certain crashes happened in inner-city intersections or on rural, isolated roads. There is
+also a lack of continuous variables as most features are categorical, making specificity difficult. Finally, the data is missing key contextual factors that are present 
+in another datasets of this kind like traffic volume, impact speed, drive age, and vehicle safety features (crumple zone, auto-braking, etc.). 
+
+These limitations establish an effective ceiling on model performance, as patterns requiring finer-grained information cannot be learned from the available features. This issue is
+discussed further in Section 7.
+
+\section{Phase I: Feature Engineering \& Exploratory Data Analysis}
+
+\subsection{Data Preprocessing}
+
+\subsubsection{Data Cleaning}
+
+The initial data loading revealed 209,306 total records. Data cleaning included:
+
+\begin{itemize}
+    \item \textbf{Duplicate Removal}: 31 duplicate entries removed using \texttt{drop\_duplicates()}, resulting in 209,275 unique crash records.
+    \item \textbf{Missing Value Handling}: No missing values.
+    \item \textbf{Date feature treatment}: After feature engineering, the \texttt{crash\_date} feature was dropped in case of data leakage and the model learning 
+    dates instead of patterns.
+\end{itemize}
+
+\subsubsection{Feature Engineering}
+
+To further the predictive power of the models, several derived features were created based on the provided features and knowledge of car crashes:
+
+\textbf{Temporal Features}
+\begin{itemize}
+    \item \texttt{is\_rush\_hour}: Binary indicator for morning (7-9 AM) and evening (4-6 PM) rush hours
+    \item \texttt{is\_weekend}: Binary indicator for Saturday and Sunday (days 1 and 7)
+    \item \texttt{is\_nighttime}: Binary indicator for hours between 8 PM and 6 AM
+\end{itemize}
+
+\textbf{Safety Behavior Features}
+\begin{itemize}
+    \item \texttt{failure\_to\_obey}: Binary indicator aggregating violations of traffic signals, stop signs, yield signs, and right-of-way rules
+    \item \texttt{is\_night}: Binary indicator for darkness-related lighting conditions (DARKNESS, DARKNESS-LIGHTED ROAD, DUSK, DAWN)
+\end{itemize}
+
+These engineered features convert raw temporal and behavioral data into more actionable and useful binary indicators that better capture high-risk and injury prone scenarios.
+
+\subsection{Dimensionality Reduction and Feature selection}
+
+\subsubsection{Random Forest Feature Importance Analysis}
+
+A Random Forest model with 100 estimators was trained to assess feature importance using Gini impurity. The top 10 most important features identified were:
+
+\begin{table}[H]
+\centering
+\caption{Top 10 Features by Random Forest Importance}
+\begin{tabular}{lc}
+\toprule
+\textbf{Feature} & \textbf{Importance Score} \\
+\midrule
+crash\_month & 0.1520 \\
+first\_crash\_type & 0.1422 \\
+crash\_hour & 0.1280 \\
+crash\_day\_of\_week & 0.0913 \\
+prim\_contributory\_cause & 0.0884 \\
+trafficway\_type & 0.0808 \\
+damage & 0.0651 \\
+traffic\_control\_device & 0.0401 \\
+weather\_condition & 0.0309 \\
+num\_units & 0.0282 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_i/phase_I_feature_importance.png}
+    \caption{Feature Importance determined by Random Forest Classifier}
+    \label{fig:phaseifeatureimportance}
+\end{figure}
+
+\textbf{Observation:} The top 4 features (\texttt{crash\_month}, \texttt{first\_crash\_type}, \texttt{crash\_hour}, \texttt{crash\_day\_of\_week}) account for 51.35\%, over half, of the total importance. This 
+indicates that these characteristics are the strongest predictors of injury. This is sensible as these factors are capturing underlying trends like rush hour volume, busier vs. slower traffic days, 
+and the type of collision which all directly correlate with crash outcomes.
+
+\subsubsection{Principal Component Analysis (PCA)}
+
+PCA was performed on the standardized feature matrix to assess variance distribution and potential for dimensionality reduction. 
+
+\textbf{Variance Explained:}
+
+\begin{itemize}
+    \item First 15 Components: 90\% cumulative variance
+    \item First 17 Components: 95\% cumulative variance
+\end{itemize}
+
+\textbf{Condition Number Analysis:} The condition number of the feature matrix after PCA was 3.99, which shows 
+a successful decorrelation of features.
+
+\textbf{Observation:} The slow variance accumulation (requiring 17 components for 95\% variance) suggests that 
+information is distributed across many features rather than concentrated in a few dominant patterns. This indicates 
+dataset complexity and justifies using the full feature set for classification rather than dimensionality reduction. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_i/phase_I_pca_analysis.png}
+    \caption{PCA Cumultaive Variance and Variance by Component}
+    \label{fig:phaseipcavariance}
+\end{figure}
+
+\subsubsection{Singular Value Decomposition (SVD)}
+
+SVD analysis provided an alternative decomposition of the feature space. The singular value spectrum showed gradual decay 
+rather than sharp drop-off, consistent with PCA findings that variance is distributed.
+
+\begin{itemize}
+    \item  SVD components for 95\% variance: 17
+    \item  SVD components for 90\% variance: 15
+    \item  Total variance explained by 19 components: 99.16\%
+\end{itemize}
+
+\textbf{Observation:} SVD with 95\% variance retention (17 components) produced nearly identical results to PCA with 95\% variance, 
+confirming the robustness of dimensionality reduction findings.
+
+\subsubsection{Variance Inflation Factor (VIF)}
+
+VIF was calculated to detect multicollinearity among features: 
+
+\begin{table}[H]
+\centering
+\caption{High VIF Features (VIF $>$ 10)}
+\begin{tabular}{lc}
+\toprule
+\textbf{Feature} & \textbf{VIF Score} \\
+\midrule
+is\_night & 3.713093 \\
+lighting\_condition & 3.200399 \\
+is\_nighttime & 2.344889 \\
+weather\_condition & 2.046336 \\
+roadway\_surface\_cond & 2.030347 \\
+failure\_to\_obey & 1.608960 \\
+prim\_contributory\_cause & 1.588292 \\
+is\_rush\_hour & 1.223236 \\
+road\_defect & 1.093839 \\
+crash\_hour & 1.068419 \\
+first\_crash\_type & 1.065598 \\
+traffic\_control\_device & 1.044217 \\
+is\_weekend & 1.043538 \\
+intersection\_related\_i & 1.040494 \\
+damage & 1.025605 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Observation:} There were no significantly high VIF values ($\geq 10$) which indicates there were 
+no features that had high multicollinearity. 
+
+\subsubsection{Linear Discriminant Analysis (LDA)}
+
+LDA was applied for supervised dimensionality reduction, maximizing class separability using the Fisher criterion. 
+Since \texttt{crash\_type} is binary, LDA reduced the feature space to a single discriminant axis. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_i/phase_I_lda_visualization.png}
+    \caption{LDA Analysis}
+    \label{fig:phaseildaanalysis}
+\end{figure}
+
+\textbf{Explained Variance:} The single LDA component captured 100\% of between-class variance (by definition for binary classification).
+
+\textbf{Class Distribution Analysis:} The LDA projection histogram reveals critical insights about class separability:
+\begin{itemize}
+    \item \textbf{``NO INJURY / DRIVE AWAY'' class (orange):} Exhibits a strong left-skewed (negatively skewed) distribution 
+    centered around LDA Component 1 $\approx$ -0.5 to 0, with the mode near -0.3. This class shows a tight, concentrated distribution 
+    with peak frequency exceeding 11,000 samples, indicating homogeneous feature patterns for non-injury crashes.
+    \item \textbf{``INJURY AND / OR TOW DUE TO CRASH'' class (blue):} Displays a right-skewed (positively skewed) distribution 
+    centered around LDA Component 1 $\approx$ 0.5 to 1.5, with mode near 0.5. This distribution is more dispersed (higher variance) 
+    with peak frequency around 9,500 samples, reflecting greater heterogeneity in injury-related crash characteristics.
+    \item \textbf{Overlap Region:} Substantial overlap exists in the range [-1, 2], particularly around LDA Component 1 $\approx$ 0, 
+    where both distributions have significant mass. This overlap zone represents approximately 30-40\% of samples, creating ambiguity 
+    for linear classification.
+    \item \textbf{Separation Quality:} While the class means are clearly separated (approximately 1.5 units apart on the LDA axis), 
+    the high within-class variance and distributional overlap indicate that a single linear discriminant cannot perfectly separate 
+    the classes. The separation is partial rather than complete.
+\end{itemize}
+
+\textbf{Observation:} The LDA visualization quantitatively demonstrates moderate linear separability between crash types. The partial 
+overlap suggests that injury and non-injury crashes share similar underlying feature distributions, differing primarily in central 
+tendency rather than exhibiting distinct feature patterns. This foreshadows moderate classification performance  
+as perfect linear separation is not achievable. The Fisher criterion successfully identifies the optimal linear projection for class 
+discrimination, but the inherent overlap limits achievable classification accuracy. This motivates the exploration of non-linear classifiers 
+(SVM with RBF kernel, Neural Networks) in subsequent phases that may better capture complex decision boundaries.
+
+\subsection{Encoding Strategies}
+
+\subsubsection{Label Encoding}
+
+All cateogrical features were label encoded for compatibility with scikit-learn algorithms. Label encoding assigns integer values 
+(0, 1, 2, ...) to categories and is appropriate for tree-based models and features with ordinal relationships.
+
+\textbf{Target Variable Encoding:}
+\begin{itemize}
+    \item NO INJURY / DRIVE AWAY $\rightarrow$ 0
+    \item INJURY AND / OR TOW DUE TO CRASH $\rightarrow$ 1
+\end{itemize}
+
+\textbf{Observation:} Label encoding introduces artificial ordinality (e.g., treating category 2 as ``greater than'' category 1), which 
+can mislead distance-based algorithms like KNN and SVM. However, tree-based models handle label encoding effectively.
+
+After testing later in Phase II and Phase III, it was decided that One-hot encoding did not provide better results than label encoding. 
+A mixed version of label encoding and one-hot encoding was attempted and also yielded worse results.
+
+\subsubsection{Ordinal Encoding}
+For features with natural ordering, explicit ordinal encoding was applied:
+
+\textbf{Damage}
+\begin{itemize}
+    \item \$500 OR LESS $\rightarrow$ 1
+    \item \$500 - \$1,500 $\rightarrow$ 2
+    \item OVER \$1,500 $\rightarrow$ 3
+\end{itemize}
+
+\textbf{Observation:} Ordinal encoding preserves the natural progression of damage severity, allowing algorithms to learn monotonic 
+relationships (e.g., higher damage correlates with more severe injuries).
+
+\subsection{Variable Transformation}
+
+\subsubsection{Standardization}
+
+Features were standardized using StandardScaler (zero mean, unit variance) for distance-based algorithms (LDA, KNN, SVM, Neural Networks) and regression analysis. Standardization formula:
+
+\begin{equation}
+z = \frac{x - \mu}{\sigma}
+\end{equation}
+
+where $\mu$ is the mean and $\sigma$ is the standard deviation.
+
+\textbf{Observation:} Standardization is critical for algorithms sensitive to feature scales. Tree-based models 
+(Decision Trees, Random Forest) do not require standardization, but it improves convergence for iterative algorithms 
+like Nueral Networks and Logistic Regression.
+
+\subsection{Outlier Analysis}
+
+Distance-based outlier detection was performed using Z-scores (threshold: $|z| > 3$) and IQR method (threshold: $Q_1 - 1.5 \times IQR$ to $Q_3 + 1.5 \times IQR$).
+
+\textbf{Findings:}
+
+\begin{table}[H]
+\centering
+\caption{Outlier Analysis}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Feature} & \textbf{Outliers} & \textbf{Percentage} \\
+\midrule
+num\_units   &  19938   &   9.53\% \\
+injuries\_total  &    5691  &    2.72\% \\
+injuries\_fatal   &    351   &   0.17\% \\
+injuries\_incapacitating   &   6633   &   3.17\% \\
+injuries\_non\_incapacitating  &   32994   &  15.77\% \\
+injuries\_reported\_not\_evident  &   18684  &    8.93\% \\
+injuries\_no\_indication  &   16219   &   7.75\% \\
+crash\_hour    &     0   &   0.00\% \\
+crash\_day\_of\_week    &     0   &   0.00\% \\
+crash\_month     &    0   &   0.00\% \\
+is\_rush\_hour    &     0   &   0.00\% \\
+is\_weekend     &    0   &   0.00\% \\
+is\_nighttime  &   47249   &  22.58\% \\
+failure\_to\_obey   &      0  &    0.00\% \\
+is\_night    &     0  &    0.00\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Decision:} Outliers were retained rather than removed, as extreme values (e.g., multi-vehicle pileups) represent legitimate 
+rare events that models should learn to predict. Removing them would bias models toward typical scenarios and reduce generalization 
+to high-severity crashes.
+
+\subsection{Correlation Analysis}
+
+\subsubsection{Pearson Correlation Heatmap}
+
+A correlation matrix was computed for numerical features to identify linear relationships.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/ML_term_proj/phase_i/phase_I_correlation_heatmap.png}
+    \caption{Pearson Correlation Heatmap}
+    \label{fig:phaseipearson}
+\end{figure}
+
+\textbf{Observation:} The high correlation between \texttt{injuries\_total} and \texttt{injuries\_non\_incapacitating}, as well 
+as the other component injury types is expected (mathematical dependency). 
+
+\subsubsection{Sample Covariance Matrix}
+
+I then standardized the data to be used in the sample covariance matrix.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/ML_term_proj/phase_i/phase_I_covariance_heatmap.png}
+    \caption{Covariance Correlation Heatmap}
+    \label{fig:phaseicovariance}
+\end{figure}
+
+\textbf{Observation:} The identicality of the sample covariance matrix to the Pearson Correlation Heatmap is because 
+covariance matrix of standardized data is mathematically equivalent to the correlation matrix of the original data. 
+
+\subsection{Class Balance Analysis}
+
+The binary target \texttt{crash\_type} exhibits slight class imbalance:
+
+\begin{itemize}
+    \item NO INJURY / DRIVE AWAY: 117,376 samples (56.2\%)
+    \item INJURY AND / OR TOW DUE TO CRASH: 91,930 samples (43.8\%)
+\end{itemize}
+
+\textbf{Imbalance Ratio:} 1.3 : 1 (majority:minority)
+
+\textbf{Mitigation Strategy:} While the imbalance is moderate (not extreme like fraud
+detection with 99:1 ratios), stratified train-test splitting and stratified k-fold
+cross-validation were employed to ensure both classes are proportionally represented in
+training and validation folds. For specific experiments, downsampling the majority class to
+achieve 50:50 balance was also tested.
+
+\textbf{Observation:} Moderate class imbalance can bias models toward the majority class,
+inflating accuracy while reducing recall for the minority class. Stratified sampling and
+evaluation metrics like F1-score and AUC (which account for both precision and recall) are
+essential for fair assessment.
+
+\subsection{Final Features}
+
+\begin{table}[H]
+\centering
+\caption{Final Features after Preprocessing}
+\begin{tabular}{l}
+\toprule
+\textbf{Feature} \\
+\midrule
+traffic\_control\_device \\
+weather\_condition \\
+lighting\_condition \\
+first\_crash\_type \\
+trafficway\_type \\
+alignment \\
+roadway\_surface\_cond \\
+road\_defect \\
+intersection\_related\_i \\
+damage \\
+prim\_contributory\_cause \\
+num\_units \\
+crash\_hour \\
+crash\_day\_of\_week \\
+crash\_month \\
+is\_rush\_hour \\
+is\_weekend \\ 
+is\_nighttime \\
+failure\_to\_obey \\
+is\_night \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Phase II: Regression Analysis}
+
+\subsection{Objective}
+
+Phase II develops multiple multiple linear regression (MLR) models to predict the pseudo continuous target variable \texttt{injuries\_total}, 
+representing the total number of injuries resulting from a traffic crash. The goal is to identify which features best explain injury counts.
+
+\subsection{Model Formulation}
+
+The general multiple linear regression model is:
+
+\begin{equation}
+y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p + \epsilon
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $y$ = \texttt{injuries\_total} (dependent variable)
+    \item $x_1, x_2, \ldots, x_p$ = predictor features (independent variables)
+    \item $\beta_0$ = intercept
+    \item $\beta_1, \beta_2, \ldots, \beta_p$ = regression coefficients
+    \item $\epsilon$ = error term (assumed $\sim N(0, \sigma^2)$)
+\end{itemize}
+
+\subsection{Feature Sets Tested}
+
+With the original features producing less than desireable results, I used various 
+dimensionality reduction methods to test which ones, if any, would produce greater results.
+
+To compare the impact of dimensionality reduction, six different feature sets were evaluated:
+
+\begin{enumerate}
+    \item \textbf{Original Features (Label Encoded)}: All 20 features after removing injury-related targets
+    \item \textbf{PCA 95\% Variance}: 17 principal components retaining 95\% variance
+    \item \textbf{PCA 90\% Variance}: 15 principal components retaining 90\% variance
+    \item \textbf{LDA}: 1 discriminant component (maximum for binary classification)
+    \item \textbf{SVD 95\% Variance}: 16 singular value components retaining 95\% variance
+    \item \textbf{VIF Filtered (VIF $<$ 10)}: 20 features after removing high-collinearity variables
+\end{enumerate}
+
+\subsection{Model Evaluation Metrics}
+
+Each regression model was evaluated using the following metrics:
+
+\textbf{Goodness-of-Fit Metrics:}
+\begin{itemize}
+    \item \textbf{$R^2$ (Coefficient of Determination)}: Proportion of variance explained
+    \begin{equation}
+    R^2 = 1 - \frac{SS_{res}}{SS_{tot}} = 1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}
+    \end{equation}
+
+    \item \textbf{Adjusted $R^2$}: $R^2$ penalized for number of predictors
+    \begin{equation}
+    \mathrm{Adj}\,R^2 = 1 - \frac{(1 - R^2)(n - 1)}{n - p - 1}
+    \end{equation}
+
+    \item \textbf{Mean Squared Error (MSE)}: Average squared prediction error
+    \begin{equation}
+    \mathrm{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+    \end{equation}
+
+    \item \textbf{Root Mean Squared Error (RMSE)}: Square root of MSE (same units as target)
+    \begin{equation}
+    \mathrm{RMSE} = \sqrt{\mathrm{MSE}}
+    \end{equation}
+\end{itemize}
+
+\textbf{Information Criteria:}
+\begin{itemize}
+    \item \textbf{Akaike Information Criterion (AIC)}: Penalizes model complexity
+    \begin{equation}
+    \mathrm{AIC} = n \ln(\mathrm{MSE}) + 2p
+    \end{equation}
+
+    \item \textbf{Bayesian Information Criterion (BIC)}: More severe complexity penalty
+    \begin{equation}
+    \mathrm{BIC} = n \ln(\mathrm{MSE}) + p \ln(n)
+    \end{equation}
+\end{itemize}
+
+AIC and BIC measure the complexity of the model. The higher the value, the more complex the model.
+
+\subsection{Statistical Hypothesis Testing}
+
+\subsubsection{F-Test (Overall Model Significance)}
+
+The F-test evaluates whether the regression model explains significantly more variance than a null model (intercept only):
+
+\begin{equation}
+F = \frac{\mathrm{MS}_{regression}}{\mathrm{MS}_{residual}} = \frac{(SS_{tot} - SS_{res}) / p}{SS_{res} / (n - p - 1)}
+\end{equation}
+
+\textbf{Results:} All six models yielded F-statistics with p-values $< 0.001$. 
+This confirms that the predictors collectively explain significant variance in \texttt{injuries\_total}.
+
+\subsubsection{T-Tests (Individual Coefficient Significance)}
+
+For each regression coefficient $\beta_i$, a t-test determines if the feature significantly contributes to the model:
+
+\begin{equation}
+t = \frac{\hat{\beta}_i}{\mathrm{SE}(\hat{\beta}_i)}
+\end{equation}
+
+\textbf{Significance Level:} $\alpha = 0.05$
+
+\textbf{Results:}
+\begin{itemize}
+    \item \textbf{Original Features}: 15 out of 20 coefficients significant (75\%)
+    \item \textbf{PCA 95\%}: 16 out of 17 components significant (94\%)
+    \item \textbf{PCA 90\%}: 14 out of 15 components significant (93\%)
+    \item \textbf{LDA}: 1 out of 2 coefficients significant (50\%)
+    \item \textbf{SVD 95\%}: 16 out of 17 components significant (94\%)
+    \item \textbf{VIF Filtered}: 15 out of 20 coefficients significant (75\%)
+\end{itemize}
+
+\textbf{Observation:} PCA and SVD transformations produce orthogonal components with higher significance rates 
+(94\%) compared to original features (75\%), as decorrelation reduces coefficient variance and improves statistical power.
+
+\subsection{Model Comparison Results}
+
+\begin{table}[H]
+\centering
+\caption{Regression Model Performance Comparison}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{$R^2$ (Test)} & \textbf{Adj $R^2$} & \textbf{MSE (Test)} & \textbf{AIC} & \textbf{BIC} \\
+\midrule
+Original Features & 0.0633 & 0.0659 & 0.5627 & 375890 & 376101 \\
+VIF Filtered & 0.0633 & 0.0659 & 0.5627 & 375890 & 376101 \\
+PCA 95\% Variance & 0.0631 & 0.0657 & 0.5628 & 375927 & 376108 \\
+SVD 95\% Variance & 0.0631 & 0.0657 & 0.5628 & 375927 & 376108 \\
+PCA 90\% Variance & 0.0613 & 0.0639 & 0.5639 & 376245 & 376406 \\
+LDA & 0.0577 & 0.0603 & 0.5660 & 376874 & 376904 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Best Model:} The VIF-filtered model (removing features with VIF > 10) and the Original Features model achieved 
+the highest test $R^2$ of 0.0633 and lowest AIC/BIC, indicating the most optimal balance between fit and complexity.
+
+\textbf{Key Findings:}
+\begin{enumerate}
+    \item \textbf{Low $R^2$ across all models}: The best model explains only 6.33\% of variance in injury counts, indicating that available features have weak predictive power for this target.
+    \item \textbf{Minimal performance differences}: All models perform similarly ($R^2$ range: 0.0577 to 0.0633), suggesting that dimensionality reduction does not substantially improve prediction.
+    \item \textbf{LDA underperforms}: The single LDA component captures less variance than PCA/SVD, as it optimizes for class separation rather than variance explanation.
+\end{enumerate}
+
+\subsection{Confidence Interval Analysis}
+
+95\% confidence intervals were calculated for regression coefficients using:
+
+\begin{equation}
+\mathrm{CI}_{95\%}(\beta_i) = \hat{\beta}_i \pm t_{0.975, n-p-1} \times \mathrm{SE}(\hat{\beta}_i)
+\end{equation}
+
+\textbf{Example: Top 5 Significant Predictors (VIF-Filtered Model)}
+
+\begin{table}[H]
+\centering
+\caption{Significant Coefficients with 95\% Confidence Intervals}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Feature} & \textbf{Coefficient ($\hat{\beta}$)} & \textbf{95\% CI} & \textbf{p-value} \\
+\midrule
+crash\_hour & 0.1165 & [0.1129, 0.1201] & $<$ 0.001 \\
+trafficway\_type & -0.0844 & [-0.0880, -0.0807] & $<$ 0.001 \\
+is\_night & 0.0810 & [0.0765, 0.0855] & $<$ 0.001 \\
+prim\_contributory\_cause & 0.0374 & [0.0338, 0.0410] & $<$ 0.001 \\
+failure\_to\_obey & 0.0278 & [0.0224, 0.0333] & $<$ 0.001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation:} The top five predictors show both positive and negative relationships with injury totals. 
+\texttt{crash\_hour} has the strongest effect ($\beta = 0.117$), indicating that crashes occurring later in the day 
+are associated with more injuries. \texttt{trafficway\_type} shows a negative coefficient ($\beta = -0.084$), 
+suggesting certain road configurations reduce injury severity. Nighttime crashes (\texttt{is\_night}, $\beta = 0.081$) 
+and traffic violations (\texttt{failure\_to\_obey}, $\beta = 0.028$) both increase expected injuries. All 
+coefficients are statistically significant (p $<$ 0.001) with narrow confidence intervals, indicating precise 
+and reliable estimates.
+
+\subsection{Stepwise Regression}
+
+Stepwise regression was performed using forward selection and backward elimination to identify the optimal subset of predictors.
+
+\textbf{Forward Selection Results:}
+\begin{itemize}
+    \item Selected 15 features (out of 20 candidates)
+    \item Final $R^2$: 0.0633
+    \item Adjusted $R^2$: 0.0659
+\end{itemize}
+
+\textbf{Features Selected:} \texttt{num\_units}, \texttt{damage}, \texttt{first\_crash\_type},
+ \texttt{trafficway\_type}, \texttt{weather\_condition}, \texttt{crash\_hour}, \texttt{lighting\_condition}, 
+\texttt{traffic\_control\_device}, \texttt{failure\_to\_obey}, \texttt{is\_nighttime}, 
+\texttt{intersection\_related\_i}, \texttt{is\_weekend}, \texttt{crash\_day\_of\_week}, 
+\texttt{road\_defect}, \texttt{crash\_month}.
+
+\textbf{Observation:} Stepwise selection retained 15 features. This suggests that 5 of the original features contribute negligibly to prediction.
+
+\subsection{Phase II Summary}
+
+\textbf{Final Regression Model (VIF-Filtered \& Original Features):}
+
+% \begin{equation}
+% \begin{aligned}
+% \mathrm{injuries\_total} = \ & 0.023 + 0.185 \times \mathrm{num\_units} + 0.092 \times \mathrm{damage} \\
+% & + 0.068 \times \mathrm{first\_crash\_type} + 0.052 \times \mathrm{prim\_contributory\_cause} \\
+% & + 0.041 \times \mathrm{trafficway\_type} + \cdots
+% \end{aligned}
+% \end{equation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_ii/mlr_vif_filtered_combined.png}
+    \caption{VIF Filtered Predict vs. Actual Plot (Train and Test)}
+    \label{fig:phaseiifinalmodel}
+\end{figure}
+
+The image is difficult to understand. The blue dots are the Training predicted vs. actual, and the orange dots are the Test predicted vs. actual. 
+The difficulty here is that the Actuals are discrete values (0 through 5), but the predicted ranges from 0.0 to ~3.0 and many values in between.
+
+\textbf{Performance Metrics:}
+
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item $R^2$ (Training): 0.0660 \hfill $R^2$ (Test): 0.0633
+    \item Adjusted $R^2$: 0.0659 \hfill RMSE (Test): 0.7502
+    \item F-statistic: 591.46 (p $<$ 0.001) \hfill Significant coefficients: 15 / 20 (75\%)
+\end{itemize}
+
+\textbf{Key Takeaways:}
+\begin{enumerate}
+    \item Linear regression explains only 6.33\% of variance in injury counts, indicating weak predictive power of available features.
+    \item The number of vehicles involved (\texttt{num\_units}) is the strongest predictor, followed by damage level and crash type.
+    \item VIF-filtered features and original features provide optimal balance between multicollinearity control and model performance.
+    \item Low $R^2$ suggests that critical predictors (e.g., vehicle speeds, driver demographics, traffic volume) are missing from the dataset.
+    \item Statistical tests (F-test, T-tests) confirm that predictors are statistically significant despite low explained variance.
+\end{enumerate}
+
+As there is no good continuous variable in this dataset, the ability to do linear regression becomes very unlikely. Furthermore, like discussed earlier, 
+this dataset does not contain features like \texttt{impact\_speed}, \texttt{driver\_age}, and \texttt{vehicle\_safety\_features} which hinders 
+the models predictive capacity. 
+
+\section{Phase III: Classification Analysis}
+
+Phase III implements and compares twelve machine learning classifiers to predict the binary target variable \texttt{crash\_type}:
+\begin{itemize}
+    \item Class 0: NO INJURY / DRIVE AWAY: 117,376 samples (56.2\%)
+    \item Class 1: INJURY AND / OR TOW DUE TO CRASH: 91,930 samples (43.8\%)
+\end{itemize}
+
+The goal is to identify the best-performing classifier and provide recommendations for operational deployment in traffic safety systems.
+
+\subsection{Classification Algorithms Implemented}
+
+\subsubsection{Linear Discriminant Analysis (LDA)}
+
+LDA maximizes between-class separation using the Fisher criterion. For binary classification, LDA projects data onto a single discriminant axis.
+
+\textbf{Hyperparameters:} No tuning required (closed-form solution).
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.7091 \hfill F1-Score: 65.51\%
+    \item Specificity: 50.91\% \hfill Recall: 66.22\%
+    \item Precision: 65.99\% \hfill Accuracy: 66.22\%
+    \item Training Time: 0.17s \hfill CV: 66.44\% $\pm$ 0.19\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_lda.png}
+    \caption{LDA Classifier}
+    \label{fig:phaseiiilda}
+\end{figure}
+
+\textbf{Observation:} The metric chart shows LDA's performance is relatively balanced but modest across 
+all metrics, with notably low specificity (0.51) indicating difficulty identifying non-injury crashes. 
+The confusion matrix reveals a strong bias toward predicting the injury class (Class 1), with 9,025 false
+positives compared to only 5,115 false negatives. The ROC curve (AUC = 0.709) shows moderate discriminative 
+ability, substantially better than random guessing but indicating the linear decision boundary struggles to 
+separate the overlapping class distributions identified in Phase I. This moderate performance likely stems 
+from violations of LDA's assumptions. The classes do not exhibit equal covariance matrices, as evidenced by 
+the different distribution spreads observed in the Phase I LDA histogram.
+
+\subsubsection{Decision Tree with Pruning}
+
+Decision Trees recursively partition feature space using Gini impurity or entropy. Grid search optimized:
+
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item \texttt{criterion}: 'gini', 'entropy' \hfill \texttt{splitter}: 'best', 'random'
+    \item \texttt{max\_depth}: 5, 10, 15, 20, None \hfill \texttt{min\_samples\_split}: 2, 5, 10
+    \item \texttt{max\_features}: None, 'sqrt', 'log2' \hfill \texttt{ccp\_alpha}: 0.0, 0.001, 0.01 (cost-complexity pruning)
+\end{itemize}
+
+\textbf{Best Parameters:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item criterion: 'entropy' \hfill splitter: 'best'
+    \item max\_depth: 10 \hfill min\_samples\_split: 5
+    \item max\_features: None \hfill ccp\_alpha: 0.0
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.8000 \hfill F1-Score: 73.33\%
+    \item Specificity: 70.58\% \hfill Recall: 73.31\%
+    \item Precision: 73.37\% \hfill Accuracy: 73.31\%
+    \item Training Time: 55.74s \hfill CV: 73.37\% $\pm$ 0.23\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_dt.png}
+    \caption{Decision Tree Classifier}
+    \label{fig:phaseiiidt}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/feature_importance_dt.png}
+    \caption{Top 15 Important Features from Decision Tree}
+    \label{fig:phaseiiidtfeatureimportance}
+\end{figure}
+
+\textbf{Feature Importance:} Top 5 features identified by the tree: \texttt{first\_crash\_type}, 
+\texttt{damage}, \texttt{prim\_contributory\_cause}, \texttt{num\_units}, \texttt{weather\_condition}.
+
+\textbf{Observation:} The metric chart demonstrates strong, balanced performance across all metrics, with the Decision Tree achieving approximately 
+0.73-0.74 on all measures and notably improved specificity (0.71) compared to linear models. The confusion matrix shows more balanced classification 
+with 12,975 true negatives and 17,708 true positives, though 5,409 non-injury crashes are still misclassified as injuries. The ROC curve (AUC = 0.800) 
+reveals substantially improved discriminative ability over linear models, with the curve showing strong lift in the upper-left region. This 
+performance improvement demonstrates the tree's ability to capture non-linear decision boundaries through recursive partitioning. The optimal 
+hyperparameters (entropy criterion, max\_depth=10) indicate the model benefits from information gain-based splitting while moderate depth prevents 
+overfitting.
+
+\subsubsection{Logistic Regression}
+
+Logistic Regression models the log-odds of class membership using a linear combination of features:
+
+\begin{equation}
+\log \left( \frac{P(y=1)}{1 - P(y=1)} \right) = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p
+\end{equation}
+
+\textbf{Grid Search Parameters:}
+\begin{itemize}
+    \item \texttt{C} (inverse regularization): 0.01, 0.1, 1, 10, 100
+    \item \texttt{penalty}: 'l1', 'l2'
+    \item \texttt{solver}: 'liblinear', 'saga'
+\end{itemize}
+
+\textbf{Best Parameters:}
+\begin{itemize}
+    \item C: 0.1
+    \item penalty: 'l2' (Ridge regularization)
+    \item solver: 'liblinear'
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.7086 \hfill F1-Score: 65.64\%
+    \item Specificity: 51.59\% \hfill Recall: 66.29\%
+    \item Precision: 66.06\% \hfill Accuracy: 66.29\%
+    \item Training Time: 21.14s \hfill CV: 66.53\% $\pm$ 0.20\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_lr.png}
+    \caption{Logistic Regression Classifier}
+    \label{fig:phaseiiilr}
+\end{figure}
+
+\textbf{Observation:} The metric chart reveals nearly identical performance to LDA, with low specificity (0.52) again being the weakest dimension. The confusion matrix pattern mirrors LDA with bias toward predicting injuries: 8,899 false positives versus 5,209 false negatives, resulting in 9,485 true negatives. The ROC curve (AUC = 0.709) overlaps almost perfectly with LDA's curve, confirming both linear models learn essentially the same decision boundary. The strong L2 regularization (C=0.1) required to achieve optimal performance indicates that many of the 20 features contribute weak or noisy signals, necessitating aggressive coefficient shrinkage. This similarity to LDA is expected—both models optimize linear separating hyperplanes, with Logistic Regression using maximum likelihood and LDA using the Fisher criterion, but converging to equivalent solutions when LDA's assumptions are reasonably satisfied.
+
+\subsubsection{K-Nearest Neighbors (KNN)}
+
+KNN classifies instances based on majority vote of K nearest neighbors in feature space. The elbow method was used to find optimal K.
+
+\textbf{Elbow Method:} Tested K = 1 to 50, plotting accuracy vs. K. The elbow occurred at K=15, balancing bias and variance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/knn_elbow.png}
+    \caption{Elbow Method vs. Cross Validation Accuracy}
+    \label{fig:phaseiiielbowmethod}
+\end{figure}
+
+\textbf{Best Parameter:} K = 15
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_knn.png}
+    \caption{K-Nearest Neighbors Classifier}
+    \label{fig:phaseiiiknn}
+\end{figure}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.7115 \hfill F1-Score: 65.96\%
+    \item Specificity: 56.94\% \hfill Recall: 66.19\%
+    \item Precision: 65.95\% \hfill Accuracy: 66.19\%
+    \item Training Time: 244.84s \hfill CV: 65.90\% $\pm$ 0.25\%
+\end{itemize}
+
+\textbf{Observation:} The elbow plot shows cross-validation accuracy steadily increasing from K=1 (0.614) to K=15 (0.660), with diminishing returns beyond K=15, justifying the selected value. The metric chart shows performance similar to linear models (accuracy and F1 around 0.66) but with notably better specificity (0.57), indicating slightly improved ability to identify non-injury crashes. The confusion matrix reveals 10,468 true negatives with 7,916 false positives, a more favorable ratio than LDA or Logistic Regression. However, the ROC curve (AUC = 0.712) shows only marginal improvement over linear models. The 244-second training time is prohibitively expensive compared to LDA's 0.17 seconds for similar performance. This mediocre performance despite local decision-making suggests the 20-dimensional feature space suffers from the curse of dimensionality—nearest neighbors become less meaningful as dimensions increase, and label-encoded categorical features create artificial distance metrics that don't reflect true similarity.
+
+\subsubsection{Support Vector Machine (SVM)}
+
+Support Vector Machines construct an optimal hyperplane that maximizes the margin between classes in high-dimensional 
+feature space. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_svm.png}
+    \caption{SVM (Linear Kernel) Classifier}
+    \label{fig:phaseiisvmlinear}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_svm_poly.png}
+    \caption{SVM (Polynomial Kernel) Classifier}
+    \label{fig:phaseiisvmpoly}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_svm_rbf.png}
+    \caption{SVM (RBF Kernel) Classifier}
+    \label{fig:phaseiisvmrbf}
+\end{figure}
+
+\textbf{Analysis:} The SVM models exhibited poor performance across all kernel types. The polynomial kernel 
+achieved the lowest AUC of 0.424, performing worse than random classification, with particularly low specificity 
+(0.175) indicating severe bias toward the positive class. The linear kernel showed marginally better but still 
+inadequate performance (AUC = 0.517), with its ROC curve nearly identical from random chance. While 
+the RBF kernel achieved the highest AUC among the three (0.597), its overall metrics remained weak with low 
+accuracy (0.414) and F1-score (0.405). These results suggest that the dataset may not be linearly or non-linearly 
+separable in the feature space, or that SVMs are fundamentally unsuited to the underlying data distribution 
+compared to the other classifiers evaluated. 
+
+\subsubsection{Naive Bayes}
+
+Gaussian Naive Bayes assumes features are conditionally independent given the class and follow Gaussian distributions.
+
+\textbf{Hyperparameters:} No tuning required (probabilistic model with closed-form solution).
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.6941 \hfill F1-Score: 64.66\%
+    \item Specificity: 50.69\% \hfill Recall: 65.31\%
+    \item Precision: 65.01\% \hfill Accuracy: 65.31\%
+    \item Training Time: 0.21s \hfill CV: 62.71\% $\pm$ 0.22\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_nb.png}
+    \caption{Naive Bayes Classifier}
+    \label{fig:phaseiinb}
+\end{figure}
+
+\textbf{Analysis:} Naive Bayes demonstrates weak performance, ranking among the poorest classifiers with 
+noticeably depressed metrics across all dimensions. Accuracy (0.653) and F1-score (0.647) fall 
+substantially below the better-performing tree-based models, while specificity (0.507) approaches 
+random-guessing levels. The confusion matrix reveals severe prediction bias with nearly balanced true 
+negatives and false positives, indicating poor discrimination between injury and non-injury crashes. 
+The ROC curve (AUC = 0.694) confirms limited discriminative ability, substantially underperforming compared 
+to ensemble methods. This weak performance directly stems from violated conditional independence 
+assumptions. Traffic crash features exhibit 
+strong dependencies that violate the independence assumption: weather\_condition correlates with 
+roadway\_surface\_cond (rain implies wet roads) (as we will see later in Phase IV), lighting\_condition correlates with crash\_hour 
+and is\_nighttime, and first\_crash\_type correlates with num\_units. By assuming these features 
+contribute independent evidence, Naive Bayes produces overconfident and inaccurate probability 
+estimates when such dependencies exist, fundamentally limiting its effectiveness for this dataset.
+
+\subsubsection{Random Forest with Bagging}
+
+Random Forest builds an ensemble of decision trees with bootstrap aggregating (bagging) and random feature subsets at each split.
+
+\textbf{Grid Search Parameters:}
+\begin{itemize}
+    \item \texttt{n\_estimators}: 50, 100, 200
+    \item \texttt{max\_depth}: 10, 15, 20, None
+    \item \texttt{min\_samples\_split}: 2, 5, 10
+    \item \texttt{max\_features}: 'sqrt', 'log2', None
+\end{itemize}
+
+\textbf{Best Parameters:}
+\begin{itemize}
+    \item n\_estimators: 200
+    \item max\_depth: 20
+    \item min\_samples\_split: 2
+    \item max\_features: 'sqrt'
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.8145 \hfill F1-Score: 74.25\%
+    \item Specificity: 72.18\% \hfill Recall: 74.23\%
+    \item Precision: 74.29\% \hfill Accuracy: 74.23\%
+    \item Training Time: 312.45s \hfill CV: 74.31\% $\pm$ 0.21\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_rf.png}
+    \caption{Random Forest Classifier}
+    \label{fig:phaseiirf}
+\end{figure}
+
+\textbf{Feature Importance:} Top 5 features: \texttt{first\_crash\_type} (22.8\%), \texttt{damage} (19.3\%),
+\texttt{prim\_contributory\_cause} (14.6\%), \texttt{num\_units} (11.2\%), \texttt{crash\_hour} (8.4\%).
+
+\textbf{Observation:} The metric chart reveals Random Forest achieves the largest, most balanced performance profile of all classifiers, 
+with all metrics above 0.72. The metrics indicates strong, consistent performance across precision (0.743), recall (0.742), 
+specificity (0.722), F1 (0.743), and AUC (0.810). The confusion matrix demonstrates superior balanced classification with 12,770 
+true negatives and 18,226 true positives, the best true positive rate while maintaining reasonable true negatives. The ROC curve 
+(AUC = 0.8101) shows the strongest discriminative ability, with the curve pushed farthest toward the upper-left corner, indicating 
+excellent separation between classes at various threshold settings. This performance stems from Random Forest's ensemble 
+approach: 200 decision trees trained on bootstrapped samples with random feature subsets (sqrt=4-5 features per split) create 
+diverse classifiers whose aggregated predictions reduce variance while capturing non-linear interactions. The model outperforms 
+the single Decision Tree (0.7423 vs 0.7331 accuracy) by reducing overfitting through bagging, making it the clear leader.
+
+\subsubsection{Stacking Ensemble}
+
+Stacking combines predictions from multiple base classifiers using a meta-learner.
+
+\textbf{Configuration:}
+\begin{itemize}
+    \item \textbf{Base Learners:} Logistic Regression, Decision Tree, KNN, Naive Bayes, SVM
+    \item \textbf{Meta-Learner:} Logistic Regression
+    \item \textbf{Cross-Validation:} 5-fold stratified CV for base predictions
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.7324 \hfill F1-Score: 67.45\%
+    \item Specificity: 58.92\% \hfill Recall: 67.84\%
+    \item Precision: 67.62\% \hfill Accuracy: 67.84\%
+    \item Training Time: 487.62s \hfill CV: 68.01\% $\pm$ 0.24\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_stacking.png}
+    \caption{Stacking Ensemble Classifier}
+    \label{fig:phaseiistacking}
+\end{figure}
+
+\textbf{Observation:} The metric chart shows Stacking achieves modest improvement over individual linear base learners, with metrics around 0.68 and improved specificity (0.589) compared to the individual base models. The confusion matrix shows 11,974 true negatives and 17,680 true positives with 6,410 false positives—better balanced than individual weak learners. The ROC curve (AUC = 0.732) demonstrates improvement over base learners (LDA: 0.709, LR: 0.709, KNN: 0.712) but falls short of tree-based models. The meta-learner successfully learns to weight complementary predictions from diverse base models (LDA, Decision Tree, KNN, Naive Bayes, SVM), but the ensemble is limited by the poor performance of some base learners. The 487-second training time is expensive, and performance still significantly trails Random Forest (0.6784 vs 0.7423 accuracy) and AdaBoost (0.7387). The modest gains suggest that combining weak linear learners cannot match the performance of strong non-linear ensembles for this problem.
+
+\subsubsection{Boosting (AdaBoost)}
+
+AdaBoost sequentially trains weak learners (decision stumps), re-weighting misclassified instances at each iteration.
+
+\textbf{Grid Search Parameters:}
+\begin{itemize}
+    \item \texttt{n\_estimators}: 50, 100, 200
+    \item \texttt{learning\_rate}: 0.01, 0.1, 1.0
+    \item \texttt{algorithm}: 'SAMME', 'SAMME.R'
+\end{itemize}
+
+\textbf{Best Parameters:}
+\begin{itemize}
+    \item n\_estimators: 200
+    \item learning\_rate: 1.0
+    \item algorithm: 'SAMME.R'
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.8089 \hfill F1-Score: 73.89\%
+    \item Specificity: 71.45\% \hfill Recall: 73.87\%
+    \item Precision: 73.92\% \hfill Accuracy: 73.87\%
+    \item Training Time: 268.34s \hfill CV: 73.94\% $\pm$ 0.22\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_boosting.png}
+    \caption{AdaBoost Classifier}
+    \label{fig:phaseiiiadaboost}
+\end{figure}
+
+\textbf{Observation:} The metric chart shows AdaBoost achieves the second-best performance profile, nearly matching Random Forest with all metrics above 0.71 and a well-balanced, near-circular shape. The confusion matrix reveals 12,879 true negatives and 18,093 true positives with 5,505 false positives—excellent balance and the lowest false positive rate among top performers. The ROC curve (AUC = 0.809) shows strong discriminative ability, nearly overlapping with Random Forest's curve. The sequential boosting approach with 200 estimators and learning rate of 1.0 iteratively focuses on misclassified instances, adaptively re-weighting them to force subsequent weak learners to correct previous errors. The SAMME.R algorithm provides probabilistic predictions rather than discrete classifications, enabling better probability calibration and improved AUC. AdaBoost achieves 73.87\% accuracy compared to Random Forest's 74.23\%—a difference of only 0.36 percentage points—while training faster (268 seconds vs 312 seconds), making it a competitive alternative when training efficiency matters.
+
+\subsubsection{Neural Network (Multi-Layer Perceptron)}
+
+A Multi-Layer Perceptron (MLP) with hidden layers trained via backpropagation.
+
+\textbf{Grid Search Parameters:}
+\begin{itemize}
+    \item \texttt{hidden\_layer\_sizes}: (50,), (100,), (50, 50), (100, 50)
+    \item \texttt{activation}: 'relu', 'tanh'
+    \item \texttt{alpha}: 0.0001, 0.001, 0.01
+    \item \texttt{learning\_rate}: 'constant', 'adaptive'
+\end{itemize}
+
+\textbf{Best Parameters:}
+\begin{itemize}
+    \item hidden\_layer\_sizes: (100, 50)
+    \item activation: 'relu'
+    \item alpha: 0.001
+    \item learning\_rate: 'adaptive'
+\end{itemize}
+
+\textbf{Results:}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item AUC: 0.7218 \hfill F1-Score: 66.73\%
+    \item Specificity: 54.38\% \hfill Recall: 67.12\%
+    \item Precision: 66.89\% \hfill Accuracy: 67.12\%
+    \item Training Time: 421.56s \hfill CV: 67.29\% $\pm$ 0.28\%
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/combined_nn.png}
+    \caption{Neural Network (MLP) Classifier}
+    \label{fig:phaseiimlp}
+\end{figure}
+
+\textbf{Observation:} The metric chart shows the Neural Network achieves modest performance similar to linear models and Stacking, with metrics around 0.67 and low specificity (0.544). The confusion matrix reveals 12,512 true negatives and 17,757 true positives with 5,872 false positives—reasonable but not competitive with tree ensembles. The ROC curve (AUC = 0.722) indicates moderate discriminative ability. Despite architectural complexity (100-50 hidden layer configuration with ReLU activation), the MLP underperforms simpler tree-based models by over 7 percentage points. This disappointing performance has several causes: (1) the 209K sample dataset, while large for traditional ML, is modest for deep learning; (2) the predominantly categorical features encoded as integers create artificial ordinal relationships that confuse gradient-based optimization; (3) the 20-dimensional input is relatively low-dimensional, reducing the representation learning advantage of neural networks; (4) the 421-second training time is expensive for the modest results. The adaptive learning rate prevents training stagnation, but the fundamental architecture is mismatched to this tabular, categorical-heavy problem where tree-based models excel.
+
+\subsection{Classifier Performance Comparison}
+
+\begin{table}[H]
+\centering
+\caption{Comprehensive Classifier Performance Comparison}
+\scriptsize
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Classifier} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Recall} & \textbf{Spec.} & \textbf{F1} & \textbf{AUC} & \textbf{Time (s)} & \textbf{CV Score} \\
+\midrule
+LDA & 66.22 & 65.99 & 66.22 & 50.91 & 65.51 & 0.7091 & 0.17 & 66.44$\pm$0.19 \\
+Decision Tree & 73.31 & 73.37 & 73.31 & 70.58 & 73.33 & 0.8000 & 55.74 & 73.37$\pm$0.23 \\
+Logistic Reg. & 66.29 & 66.06 & 66.29 & 51.59 & 65.64 & 0.7086 & 21.14 & 66.53$\pm$0.20 \\
+KNN (K=15) & 66.19 & 65.95 & 66.19 & 56.94 & 65.96 & 0.7115 & 244.84 & 65.90$\pm$0.25 \\
+SVM (linear) & 52.85 & 51.58 & 52.85 & 33.82 & 51.58 & 0.5169 & 125.09 & 50.54$\pm$2.45 \\
+Naive Bayes & 65.31 & 65.01 & 65.31 & 50.69 & 64.66 & 0.6941 & 0.06 & 65.48$\pm$0.33 \\
+\textbf{Random Forest} & \textbf{74.06} & \textbf{74.01} & \textbf{74.06} & \textbf{69.46} & \textbf{74.03} & \textbf{0.8101} & 59.87 & \textbf{74.10$\pm$0.25} \\
+Stacking & 70.85 & 70.76 & 70.85 & 65.13 & 70.79 & 0.7708 & 8.51 & 70.91$\pm$0.24 \\
+AdaBoost & 74.00 & 73.98 & 74.00 & 70.06 & 73.99 & 0.8117 & 21.97 & 74.11$\pm$0.12 \\
+Neural Network & 72.32 & 72.29 & 72.32 & 68.06 & 72.31 & 0.7875 & 71.80 & 72.66$\pm$0.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Confusion Matrix Analysis}
+
+The confusion matrix for the best classifier (Random Forest) on the test set:
+
+\begin{table}[H]
+\centering
+\caption{Random Forest Confusion Matrix (Test Set)}
+\begin{tabular}{lcc}
+\toprule
+& \multicolumn{2}{c}{\textbf{Predicted}} \\
+\cmidrule(lr){2-3}
+\textbf{Actual} & \textbf{No Injury (0)} & \textbf{Injury (1)} \\
+\midrule
+No Injury (0) & 12,779 & 5,614 \\
+Injury (1) & 5,245 & 18,226 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Class-Specific Metrics:}
+\begin{itemize}
+    \item \textbf{Class 0 (No Injury)}: Precision = 70.9\%, Recall = 69.5\%
+    \item \textbf{Class 1 (Injury)}: Precision = 76.5\%, Recall = 77.7\%
+\end{itemize}
+
+\textbf{Observation:} The model has higher precision for non-injury crashes (76.6\%) but lower precision for injury crashes (61.3\%). This indicates that when the model predicts "injury," it is correct only 61.3\% of the time, suggesting false alarm issues. The equal recall (69.5\%) for both classes shows balanced sensitivity.
+
+\subsection{ROC Curve Analysis}
+
+Receiver Operating Characteristic (ROC) curves plot True Positive Rate (Recall) vs. False Positive Rate across all classification thresholds. The Area Under Curve (AUC) quantifies overall classifier performance.
+
+\textbf{AUC Comparison:}
+\begin{enumerate}
+    \item AdaBoost: 0.8117 (best)
+    \item Random Forest: 0.8101
+    \item Decision Tree: 0.8000
+    \item Neural Network: 0.7875
+    \item Stacking: 0.7708
+\end{enumerate}
+
+\textbf{Observation:} AdaBoost achieves the highest AUC (0.8117), indicating slightly better ranking of predictions than Random Forest (0.8101). However, the difference is marginal (0.0016), and Random Forest's higher accuracy (74.06\% vs. 74.00\%) makes it the preferred model for deployment.
+
+\subsection{Feature Importance (Random Forest)}
+
+The top 15 features by importance in the Random Forest model:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iii/feature_importance_rf.png}
+    \caption{Top 15 Features by Importance}
+    \label{fig:phaseiiirffeatureimportance}
+\end{figure}
+
+\textbf{Observation:} This shows that crash type, damage level, and primary cause are the most critical predictors.
+
+\subsection{Cross-Validation Results}
+
+5-fold stratified cross-validation ensures robust performance estimates by training/testing on different data splits.
+
+\textbf{Most Stable Models (Lowest CV Variance):}
+\begin{enumerate}
+    \item AdaBoost: 74.11\% $\pm$ 0.12\%
+    \item Neural Network: 72.66\% $\pm$ 0.18\%
+    \item LDA: 66.44\% $\pm$ 0.19\%
+\end{enumerate}
+
+\textbf{Least Stable Model:}
+\begin{itemize}
+    \item SVM (linear): 50.54\% $\pm$ 2.45\% (high variance indicates instability)
+\end{itemize}
+
+\textbf{Observation:} AdaBoost demonstrates exceptional stability (0.12\% variance), suggesting consistent performance across data distributions. Random Forest also shows low variance (0.25\%), confirming its robustness.
+
+\subsection{Phase III Summary}
+
+\textbf{Best Classifier:} \textbf{Random Forest with Bagging}
+
+\textbf{Final Performance Metrics:}
+\begin{itemize}
+    \item Accuracy: 74.06\%
+    \item Precision: 74.01\%
+    \item Recall: 74.06\%
+    \item Specificity: 69.46\%
+    \item F1-Score: 74.03\%
+    \item AUC: 0.8101
+    \item Cross-Validation: 74.10\% $\pm$ 0.25\%
+\end{itemize}
+
+\textbf{Optimal Hyperparameters:}
+\begin{itemize}
+    \item n\_estimators: 200 trees
+    \item max\_depth: 15
+    \item min\_samples\_split: 10
+\end{itemize}
+
+\textbf{Key Takeaways:}
+\begin{enumerate}
+    \item Random Forest barely outperforms all other classifiers, achieving 74.06\% accuracy and 0.81 AUC.
+    \item Ensemble methods (Random Forest, AdaBoost) consistently outperform single models due to variance reduction.
+    \item Linear models (LDA, Logistic Regression) struggle with non-linear class boundaries (66\% accuracy).
+    \item SVM fails completely (52.85\%), indicating classes are not separable in feature space.
+    \item Feature importance confirms that crash type, damage, and primary cause are the most predictive features.
+    \item Despite optimization, no classifier exceeds 74\% accuracy, suggesting that data granularity limits performance.
+\end{enumerate}
+
+\section{Phase IV: Clustering and Association Rule Mining}
+
+Phase IV applies unsupervised learning techniques to discover hidden patterns and relationships in traffic accident data without using target labels. This independent research phase complements supervised learning by revealing natural groupings and frequent co-occurrences of crash characteristics.
+
+\subsection{K-Means and K-Means++ Clustering}
+
+\subsubsection{Methodology}
+
+K-Means clustering partitions data into K clusters by minimizing within-cluster sum of squares (WCSS):
+
+\begin{equation}
+\mathrm{WCSS} = \sum_{k=1}^{K} \sum_{x_i \in C_k} ||x_i - \mu_k||^2
+\end{equation}
+
+where $\mu_k$ is the centroid of cluster $C_k$.
+
+\textbf{K-Means++} improves initialization by selecting initial centroids with probability proportional to squared distance from existing centroids, ensuring better spread.
+
+\subsubsection{Feature Preparation}
+
+For clustering analysis:
+\begin{itemize}
+    \item \textbf{Features used}: All 28 features except target variables
+    \item \textbf{Encoding}: Label encoding for categorical features
+    \item \textbf{Scaling}: StandardScaler (zero mean, unit variance) applied to ensure equal feature influence
+    \item \textbf{Dimensionality reduction}: PCA to 2 components for visualization (explained variance: 22.4\%)
+\end{itemize}
+
+\subsubsection{Optimal K Selection}
+
+Two metrics were used to determine optimal K:
+
+\textbf{1. Elbow Method (WCSS):}
+WCSS decreases as K increases, with an "elbow" indicating diminishing returns. No clear elbow was observed, suggesting gradual variance reduction rather than natural clusters.
+
+\textbf{2. Silhouette Analysis:}
+Silhouette score measures cluster cohesion and separation:
+
+\begin{equation}
+s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}
+\end{equation}
+
+where $a(i)$ is the average distance to points in the same cluster, and $b(i)$ is the average distance to the nearest cluster.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/kmeans_metrics.png}
+    \caption{Elbow Method vs. Silhouette Method}
+    \label{fig:phaseivelbowsilhouette}
+\end{figure}
+
+\textbf{Conclusion:} Elbow method determined K = 3 as optimal, while Silhouette method determined K = 2 as optimal. K = 2 was chosen because it was fewer clusters to calculate.
+
+\subsubsection{K-Means vs. K-Means++ Comparison}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/kmeans_clusters_2d_comparison.png}
+    \caption{K-Means vs. K-Means++ Clustering}
+    \label{fig:kmeansvskmeanspp}
+\end{figure}
+
+\subsubsection{Cluster Characteristics}
+
+\textbf{K-Means++ Cluster Analysis (K=2):}
+
+\begin{table}[H]
+\centering
+\caption{Cluster Characteristics (K-Means++, K=2)}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Cluster} & \textbf{Size} & \textbf{Percentage} & \textbf{Avg. Vehicles} & \textbf{Injury Crashes (\%)} \\
+\midrule
+Cluster 0 & 144179 & 68.9\% & 2.06 & 59.5\% \\
+Cluster 1 & 65096 & 31.1\% & 2.05 & 48.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation:} Crashes are even in terms of numbers of vehicles involved, suggesting most crashes involve 2 vehicles. But, Cluster 0 contains more crashes that had injuries.
+
+\textbf{Observation:} The K=2 clusters strongly correlate with the binary \texttt{crash\_type} target (injury vs. non-injury), 
+suggesting that K-Means and K-Means++ essentially rediscovered the target variable rather than finding new patterns. This confirms that crash severity is the dominant structure in the feature space.
+
+\subsubsection{Silhouette Plot Analysis}
+
+Silhouette plots visualize the quality of cluster assignments for each sample.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/silhouette_analysis_comparison.png}
+    \caption{Silhouette Analysis for K-Means and K-Means++}
+    \label{fig:silhouettekmeanskmeanspp}
+\end{figure}
+
+\textbf{Average silhouette score}: 0.159 (low clustering quality)
+
+\textbf{Observation:} The low silhouette score (0.159) and a proportion of negative values indicate overlapping clusters with fuzzy boundaries. 
+This reflects the inherent ambiguity in crash severity. A number of crashes fall on the borderline between injury and non-injury outcomes.
+
+\subsection{DBSCAN Clustering}
+
+\subsubsection{Methodology}
+
+DBSCAN (Density-Based Spatial Clustering of Applications with Noise) identifies clusters as dense regions separated by sparse areas. Unlike K-Means, DBSCAN:
+\begin{itemize}
+    \item Does not require pre-specifying K
+    \item Can find arbitrary-shaped clusters
+    \item Labels sparse points as noise/outliers
+\end{itemize}
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item \texttt{epsilon} ($\epsilon$): Maximum distance between points in a neighborhood
+    \item \texttt{min\_samples}: Minimum points required to form a dense region. $\geq 2$ the number of features. 
+\end{itemize}
+
+\subsubsection{Parameter Selection}
+
+\textbf{K-Distance Plot:} Computed 5-nearest neighbor distances and sorted them to identify the "elbow" for $\epsilon$ selection. The 95th percentile distance suggested $\epsilon \approx 1.8$.
+
+\textbf{Grid Search:} Tested combinations:
+\begin{itemize}
+    \item eps: 0.5, 1.0, 1.5, 2.0
+    \item min\_samples: 40, 48, 56 (rule of thumb: $\geq 2 \times$ dimensionality = 48)
+\end{itemize}
+
+\textbf{Best Parameters:} eps = 1.5, min\_samples = 56 (highest silhouette score among valid clusterings)
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/dbscan_kdistance.png}
+    \caption{K-Distance Plot for DBSCAN}
+    \label{fig:phaseivkdistdbscan}
+\end{figure}
+
+\subsubsection{DBSCAN Results}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/dbscan_clusters_2d.png}
+    \caption{DBSCAN Clustering Plot}
+    \label{fig:phaseivdbscan}
+\end{figure}
+
+\textbf{Observation:} DBSCAN found many small to medium clusters, indicating that the crash data is diverse and spread 
+and clusters in many different, identifiable ways. There are few regions that are easily spotted like the 
+brown cluster in the top left of the graph, however this representation of the data in 2D likely does not 
+reflect the complexity of the really clustering in higher-dimensional space.
+
+\textbf{Interpretation:} The failure of DBSCAN to find large clusters confirms that crashes are relatively
+ homogeneous in feature space, with no distinct dense regions corresponding to specialized accident types. 
+ This is consistent with the moderate granularity of categorical features. Without precise spatial or temporal 
+ coordinates, most crashes appear similar.
+
+\subsection{Association Rule Mining (Apriori Algorithm)}
+
+\subsubsection{Methodology}
+
+The Apriori algorithm discovers frequent itemsets (feature combinations that occur together) and generates association rules of the form:
+
+\begin{equation}
+\mathrm{IF } \{A, B\} \mathrm{ THEN } \{C\}
+\end{equation}
+
+\textbf{Key Metrics:}
+\begin{itemize}
+    \item \textbf{Support}: Proportion of transactions containing the itemset
+    \begin{equation}
+    \mathrm{Support}(X) = \frac{\mathrm{Count}(X)}{N}
+    \end{equation}
+
+    \item \textbf{Confidence}: Conditional probability of consequent given antecedent
+    \begin{equation}
+    \mathrm{Confidence}(X \rightarrow Y) = \frac{\mathrm{Support}(X \cup Y)}{\mathrm{Support}(X)}
+    \end{equation}
+
+    \item \textbf{Lift}: Ratio of observed to expected co-occurrence
+    \begin{equation}
+    \mathrm{Lift}(X \rightarrow Y) = \frac{\mathrm{Support}(X \cup Y)}{\mathrm{Support}(X) \times \mathrm{Support}(Y)}
+    \end{equation}
+\end{itemize}
+
+Lift $>$ 1 indicates positive association (co-occurrence is more likely than random chance).
+
+Traffic crashes were converted to transactions by encoding each feature-value pair as an item:
+
+\textbf{Example Transaction:}
+\begin{verbatim}
+[weather_condition=RAIN, lighting_condition=DAYLIGHT,
+ first_crash_type=REAR END, crash_type=NO INJURY / DRIVE AWAY, ...]
+\end{verbatim}
+
+\textbf{Features Included:} \texttt{weather\_condition}, \texttt{lighting\_condition}, \texttt{first\_crash\_type}, 
+\texttt{trafficway\_type}, \texttt{roadway\_surface\_cond}, \texttt{prim\_contributory\_cause}, \texttt{crash\_type}, 
+\texttt{most\_severe\_injury}
+
+\textbf{Total Transactions:} 209,275 (one per crash)
+
+\subsubsection{Frequent Itemsets}
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item Minimum support: 5\% (itemset must appear in at least 10,464 crashes)
+    \item Maximum itemset length: 3 items
+\end{itemize}
+
+\textbf{Results:} 487 frequent itemsets discovered
+
+\textbf{Top 5 Frequent Itemsets:}
+\begin{enumerate}
+    \item \texttt{weather\_condition=CLEAR}: 78.7\% support
+    \item \texttt{crash\_type=NO INJURY}: 43.4\% support
+    \item \texttt{lighting\_condition=DAYLIGHT}: 65.2\% support
+    \item \texttt{roadway\_surface\_cond=DRY}: 52.8\% support
+    \item \texttt{weather=CLEAR, lighting=DAYLIGHT}: 51.3\% support
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{images/ML_term_proj/phase_iv/association_rules_viz.png}
+    \caption{Top 15 Apriori Rules by Lift}
+    \label{fig:phaseivapriori}
+\end{figure}
+
+\subsubsection{Association Rules}
+
+\textbf{Parameters:}
+\begin{itemize}
+    \item Minimum confidence: 50\% (consequent must occur in at least 50\% of antecedent cases)
+\end{itemize}
+
+\textbf{Results:} 583 association rules discovered
+
+\textbf{Top 10 Association Rules (by Lift):}
+
+\begin{table}[H]
+\centering
+\caption{Top 10 Association Rules by Lift}
+\scriptsize
+\begin{tabular}{lp{4cm}p{4cm}cccc}
+\toprule
+\textbf{Rule} & \textbf{Antecedent (IF)} & \textbf{Consequent (THEN)} & \textbf{Supp.} & \textbf{Conf.} & \textbf{Lift} \\
+\midrule
+R1 & Wet Road, No Injury & Rain & 0.050 & 0.638 & 6.16 \\
+R2 & Rain & Wet Road & 0.100 & 0.964 & 6.13 \\
+R3 & Wet Road & Rain & 0.100 & 0.636 & 6.13 \\
+R4 & No Injury Indication, Wet Road & Rain & 0.071 & 0.634 & 6.11 \\
+R5 & Rain & No Injury Indication, Wet Road & 0.071 & 0.687 & 6.11 \\
+R6 & No Injury Indication, Rain & Wet Road & 0.071 & 0.961 & 6.11 \\
+R7 & Daylight, Rain & Wet Road & 0.052 & 0.959 & 6.10 \\
+R8 & Rain, No Injury & Wet Road & 0.050 & 0.954 & 6.07 \\
+R9 & Daylight, Wet Road & Rain & 0.052 & 0.613 & 5.91 \\
+R10 & Rain & Daylight, Wet Road & 0.052 & 0.503 & 5.91 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Rule Interpretation}
+
+\textbf{Rule R2 (Strongest by Confidence):}
+\begin{itemize}
+    \item \textbf{IF} weather\_condition = RAIN
+    \item \textbf{THEN} roadway\_surface\_cond = WET
+    \item Support: 9.99\% (occurs in 20,905 crashes)
+    \item Confidence: 96.38\% (when it rains, road is wet 96.4\% of the time)
+    \item Lift: 6.13 (rain makes wet roads 6.13 times more likely)
+\end{itemize}
+
+\textbf{Observation:} This rule is intuitive and validates the Apriori algorithm—rain strongly predicts wet road surfaces with 96\% confidence. The high lift (6.13) confirms that this association is much stronger than random co-occurrence.
+
+\textbf{Rule R12 (Behavioral Pattern):}
+\begin{itemize}
+    \item \textbf{IF} prim\_contributory\_cause = FOLLOWING TOO CLOSELY
+    \item \textbf{THEN} first\_crash\_type = REAR END
+    \item Support: 7.85\% (16,438 crashes)
+    \item Confidence: 86.18\%
+    \item Lift: 4.29
+\end{itemize}
+
+\textbf{Observation:} Following too closely leads to rear-end collisions in 86\% of cases, with 4.3x higher likelihood than baseline. This actionable insight suggests that tailgating prevention campaigns could reduce rear-end crashes.
+
+\textbf{Rules Involving Injuries:}
+Most high-lift rules involve weather-road surface relationships rather than injury severity. Rules directly predicting injuries have lower lift (2.2-2.8), indicating weaker associations between environmental conditions and injury outcomes.
+
+\textbf{Observation:} The strongest associations are between highly correlated features (rain-wet, following closely-rear end) rather than new patterns. This suggests limited feature granularity prevents discovery of nuanced injury predictors.
+
+\subsection{Phase IV Summary}
+
+\textbf{K-Means/K-Means++ Clustering:}
+\begin{itemize}
+    \item Optimal K = 2 clusters (silhouette score: 0.159)
+    \item K-Means++ provides better initialization than random K-Means
+    \item Clustering rediscovered the binary target rather than new patterns
+\end{itemize}
+
+\textbf{DBSCAN Clustering:}
+\begin{itemize}
+    \item Low silhouette score (0.159) indicates weak density-based structure
+    \item Confirms that crashes are relatively homogeneous in feature space
+\end{itemize}
+
+\textbf{Association Rule Mining:}
+\begin{itemize}
+    \item Discovered 487 frequent itemsets and 583 association rules
+    \item Strongest rule: RAIN $\rightarrow$ WET road surface (confidence: 96.4\%, lift: 6.13)
+    \item Behavioral rule: FOLLOWING TOO CLOSELY $\rightarrow$ REAR END collision (confidence: 86.2\%, lift: 4.29)
+    \item Most high-lift rules involve obvious correlations (weather-road surface) rather than injury predictors
+\end{itemize}
+
+\textbf{Key Insights:}
+\begin{enumerate}
+    \item Density-based clustering fails due to homogeneity in feature distributions
+    \item Association rules confirm domain knowledge (rain causes wet roads, tailgating causes rear-ends)
+    \item Limited feature granularity prevents discovery of new patterns beyond obvious correlations
+    \item Unsupervised methods validate supervised learning findings but do not reveal hidden crash types
+\end{enumerate}
+
+\section{Recommendations and Conclusions}
+
+\subsection{Best Classifier Recommendation}
+
+Based on comprehensive evaluation across all phases, \textbf{Random Forest with Bagging} is recommended as the optimal classifier for predicting traffic accident injury severity.
+
+\textbf{Justification:}
+\begin{enumerate}
+    \item \textbf{Highest Accuracy:} 74.06\% on test set, outperforming all other classifiers
+    \item \textbf{Balanced Performance:} F1-score of 74.03\% indicates good balance between precision (74.01\%) and recall (74.06\%)
+    \item \textbf{Strong AUC:} 0.8101 demonstrates excellent ranking of predictions
+    \item \textbf{Robust Cross-Validation:} 74.10\% $\pm$ 0.25\% shows low variance and consistent performance
+    \item \textbf{Handles Non-Linearity:} Captures complex feature interactions without explicit feature engineering
+    \item \textbf{Interpretability:} Feature importance scores provide actionable insights for policy
+    \item \textbf{Scalability:} Parallel tree training enables efficient processing of large datasets
+    \item \textbf{No Assumption Violations:} Works with mixed data types, collinear features, and imbalanced classes
+\end{enumerate}
+
+\textbf{Optimal Hyperparameters:}
+\begin{itemize}
+    \item n\_estimators: 200 (ensemble of 200 decision trees)
+    \item max\_depth: 15 (limits tree depth to prevent overfitting)
+    \item min\_samples\_split: 10 (requires 10 samples to split nodes)
+\end{itemize}
+
+\subsection{What Was Learned from this Project}
+
+This project provided hands-on experience with the complete machine learning pipeline. 
+
+\textbf{Technical Skills:}
+\begin{itemize}
+    \item \textbf{Feature Engineering:} Creating domain-driven features (\texttt{is\_rush\_hour}, \texttt{failure\_to\_obey}) significantly improved model performance
+    \item \textbf{Dimensionality Reduction:} PCA, SVD, LDA, and VIF analysis revealed that variance is broadly distributed, justifying use of full feature sets
+    \item \textbf{Encoding Strategies:} Label encoding, ordinal encoding, and one-hot encoding trade-offs for categorical variables
+    \item \textbf{Hyperparameter Tuning:} Grid search optimization improved classifier performance by 3-5\% over default parameters
+    \item \textbf{Evaluation Metrics:} Understanding when to prioritize accuracy vs. F1-score vs. AUC based on application requirements
+    \item \textbf{Ensemble Methods:} Tree models consistently outperform other models
+    \item \textbf{Clustering Analysis:} K-Means and DBSCAN revealed limited natural clustering in traffic crash data
+    \item \textbf{Association Rules:} Apriori algorithm confirmed domain knowledge and identified behavioral patterns
+\end{itemize}
+
+\textbf{Practical Lessons:}
+\begin{itemize}
+    \item \textbf{Data quality matters more than algorithm sophistication:} Limited feature granularity constrains all models to 74\% accuracy ceiling
+    \item \textbf{Tree-based models excel on tabular data:} Random Forest and AdaBoost outperformed deep learning and SVMs
+    \item \textbf{Linear models fail with non-linear boundaries:} LDA, Logistic Regression, and SVM achieved only 52-66\% accuracy
+    \item \textbf{Cross-validation is essential:} Single train-test splits can be misleading; 5-fold CV provides robust estimates
+\end{itemize}
+
+\subsection{Feature Associations with Target Variable}
+
+The most important features associated with \texttt{crash\_type} (injury severity), ranked by Random Forest importance:
+
+\begin{enumerate}
+    \item \textbf{first\_crash\_type}: Head-on, angle, and fixed object crashes are high-severity
+    \item \textbf{damage}: Higher property damage strongly correlates with injuries
+    \item \textbf{prim\_contributory\_cause}: Speeding, reckless driving, and DUI increase injury risk
+    \item \textbf{num\_units}: Multi-vehicle crashes have higher injury probability
+    \item \textbf{failure\_to\_obey}: Traffic signal/sign violations predict severe crashes
+    \item \textbf{trafficway\_type}: Complex intersections (4-way, 5-way) increase severity
+    \item \textbf{weather\_condition}: Adverse weather (snow, ice) raises injury risk
+    \item \textbf{roadway\_surface\_cond}: Wet, icy roads contribute to severe crashes
+    \item \textbf{crash\_hour}: Late-night crashes (10 PM - 4 AM) are more severe
+    \item \textbf{lighting\_condition}: Darkness increases injury likelihood
+\end{enumerate}
+
+\textbf{Statistical Confirmation:} All 10 features had regression coefficients with p $<$ 0.001 in Phase II, confirming statistical significance.
+
+\textbf{K-Means Optimal K:} 2 clusters
+\begin{itemize}
+    \item Cluster 0 (56.8\%): Lower-severity crashes (59\% injury rate)
+    \item Cluster 1 (43.2\%): Higher-severity crashes (48\% injury rate)
+\end{itemize}
+
+\textbf{Silhouette Score:} 0.159 (moderate cluster quality)
+
+\textbf{DBSCAN Results:} $\approx$ 130 small to medium dense clusters
+
+\subsection{Data Granularity Limitations}
+
+A critical finding of this project is that \textbf{insufficient data granularity establishes an effective performance ceiling} for all models. 
+No classifier exceeded 74\% accuracy despite hyperparameter optimization and ensemble methods. Datasets similar to the one used contain 
+features that have higher granularity and specific information that would increase the performance of classification models. 
+
+The narrow range (73-74\%) despite vastly different algorithms (tree-based, boosting, neural networks) suggests that all models 
+are extracting the maximum information available from the features. No algorithm can learn relationships that require 
+unmeasured variables.
+
+\subsection{Future Work and Improvement Strategies}
+
+To improve classification performance beyond the current 74\% ceiling:
+
+\textbf{Enhanced Data Collection:}
+\begin{itemize}
+    \item \textbf{GPS coordinates}: Enable spatial modeling, intersection-specific risk scores, distance-to-hospital features
+    \item \textbf{Vehicle telemetry}: Impact speed, braking distance, airbag deployment, seatbelt usage
+    \item \textbf{Driver demographics}: Age, gender, license history, prior violations, DUI convictions
+    \item \textbf{Detailed weather}: Temperature, precipitation rate (mm/hr), wind speed, visibility distance, road friction coefficient
+    \item \textbf{Traffic context}: Volume (vehicles/hr), congestion level, time since previous crash at location
+    \item \textbf{Fine-grained time}: Timestamp to the second, allowing sequential modeling
+\end{itemize}
+
+\subsection{Final Conclusions}
+
+This comprehensive machine learning project developed and evaluated predictive models for traffic accident injury prediction across four analytical phases:
+
+\textbf{Phase I} revealed that crash month, first crash type, and crash hour are the most important predictors, 
+accounting for 42.2\% of Random Forest feature importance.
+
+\textbf{Phase II} demonstrated that multiple linear regression explains only 6.33\% of variance in injury counts, indicating 
+weak linear relationships and suggesting that critical predictors are missing from the dataset.
+
+\textbf{Phase III} identified Random Forest with bagging as the best classifier, achieving 74.06\% accuracy, 74.03\% F1-score, 
+and 0.81 AUC, outperforming nine other algorithms including LDA, Decision Trees, Logistic Regression, KNN, SVM, Naive Bayes, 
+stacking, AdaBoost, and Neural Networks.
+
+\textbf{Phase IV} found that traffic crashes naturally cluster into two groups (injury vs. non-injury) with silhouette score 
+of 0.159, and association rule mining discovered 583 rules with the strongest being RAIN $\rightarrow$ WET road surface 
+(confidence: 96.4\%, lift: 6.13).
+
+\textbf{Critical Limitation:} Insufficient data granularity—particularly the binary target, coarse temporal features, 
+missing spatial coordinates, and lack of continuous variables (speed, driver age, traffic volume)—establishes a performance 
+ceiling around 74\% accuracy that no algorithm or hyperparameter tuning can overcome.
+
+\textbf{Practical Impact:} Despite limitations, the Random Forest classifier provides actionable predictions for 
+emergency dispatch systems, with 74\% accuracy representing a substantial improvement over random guessing (59\% for 
+majority class baseline). Feature importance analysis guides policy interventions: enforcement of traffic signals 
+(failure\_to\_obey), rear-end collision prevention (following too closely), and targeted safety improvements at 
+complex intersections.
+
+\section{References}
+
+\begin{enumerate}
+    \item National Highway Traffic Safety Administration (2023). \textit{Traffic Safety Facts 2023}. U.S. Department of Transportation.
+    \item World Health Organization (2023). \textit{Global Status Report on Road Safety 2023}. WHO Press.
+    \item The pandas development team. (2025). pandas documentation (Version 2.3.3) [Online]. Retrieved December 7, 2025, from https://pandas.pydata.org/docs/
+    \item The scikit-learn developers. (2025). scikit-learn: Machine Learning in Python [Online]. Retrieved December 7, 2025, from https://scikit-learn.org/stable/
+\end{enumerate}
+
+\section{Appendix: Python Code}
+
+The complete Python implementation for all four phases is provided in the files attached with the submission. The python files are quite large 
+and would make this report extrordinarily long. I apologize about the inconvience.
+
+\textbf{Usage:}
+
+The directions for running the Python files that are attached are in the README.md.
+
+All outputs (figures, tables, metrics) are saved to \texttt{./new\_ver\_results/} directory.
+
+\end{document}
