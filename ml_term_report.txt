@@ -1,8 +1,0 @@
-Sources
-
-statsmodels.stats.outliers_influence.variance_inflation_factor
-https://www.statsmodels.org/stable/generated/statsmodels.stats.outliers_influence.variance_inflation_factor.html
-
-pandas.DataFrame.drop
-https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop.html
-
