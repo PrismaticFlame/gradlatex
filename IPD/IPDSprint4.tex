@@ -1,0 +1,114 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+% Set up document metadata
+\setauthors{Tzu-Chen Chiu, Arjun Sivakumar, Mara Schimmel, Christopher Williams}
+\setheaderauthors{Chiu, Sivakumar, Schimmel, Williams}
+\settitle{Sprint 1 Report - Semester 2}
+\setclass{IPD}
+
+\begin{document}
+
+\maketitlepage
+
+\section{Original Sprint 1 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint_4_backlog.png}
+    \caption{Spring 4 Backlog}
+\end{figure}
+
+\section{Sprint 4 Backlog - End of Sprint Status}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint4_backlog_end.png}
+    \caption{Spring 4 Backlog - Updated}
+    \label{fig:sprint4updated}
+\end{figure}
+
+\section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage tasks.
+
+\section{Sprint Retrospective}
+
+\subsection*{Mara}
+
+For this sprint, my goal was to gain a better understanding of transformers and how they work. 
+In addition, I got an additional task to visualize the transformer results using Streamlit, 
+a Python library, and began working with small data sets to choose what version we prefer. 
+For the next sprint, I plan on learning more about transformers, setting up the ARC for 
+myself, and continuing to work on the data visualization.
+
+\subsection*{Chris}
+
+During this sprint, I focused on fixing the embedding pipeline according to the assigned 
+tasks and collaborated closely with Tzu Chen to improve the model’s performance. A significant 
+portion of the sprint was spent analyzing Google’s first and second versions of the 
+transformer-based quantum decoder (AlphaQubit) to better understand architectural changes 
+and design choices that could inform our implementation. One major impediment was the 
+reliance on a personal computer for running experiments, which made training and evaluation 
+time-consuming and limited iteration speed. Despite this constraint, collaboration went well 
+through frequent discussions and shared analysis, and the sprint resulted in clearer 
+architectural direction. Moving forward, earlier access to adequate compute resources 
+would significantly improve productivity and experimentation speed.
+
+\subsection*{Tzu-Chen}
+
+We have built the basic Transformer based on Google’s pseudo code. We studied which features 
+should be input to the model: stabilizer id, syndrome(hard input in pretraining), events and 
+so on. Then embedding all features into the matrix. We then turn the matrix into four multihead 
+attention matrices, which is the input being fed to the Transformer model later. We 
+recorded the state of the model result by RNN. After all cycles are finished running, 
+we could calculate LER and compare with the baseline MWPM. Overall, it is a very huge 
+task to complete. Thanks to my teammates and mentor’s assistance, the model has the 
+initial architecture now. For the next sprint, we plan to mimic the dataset from Google, 
+then we can actually start training our model.
+
+\subsection*{Arjun}
+
+During this sprint, my original task was to integrate an adapter to work with real-time data, 
+however the project scope shifted and real-time data was no longer part of our workflow. As a 
+result, I focused on enabling our models to run on Virginia Tech’s ARC compute cluster, which 
+involved obtaining the correct allocation, writing and debugging SLURM job scripts, configuring 
+the environment, and ensuring results could be generated and stored reliably. I encountered 
+technical impediments related to allocation access, which required coordinating with and 
+emailing the WISE team to resolve. Beyond technical work, I supported my teammates by 
+actively participating in discussions, sharing progress updates, and helping troubleshoot 
+issues where possible. Overall, the sprint went well in terms of infrastructure setup 
+and collaboration, though earlier clarification of changing project requirements could 
+have reduced rework and improved efficiency.
+
+\section{Product Backlog (Updated)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_product_backlog_sem2.png}
+    \caption{Updated Product Backlog}
+\end{figure}
+
+\section{Issue Tracking}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Completed} \\ \midrule
+ARC Access & Getting all members access to ARC & Ongoing & Ongoing \\
+Ensuring data quality & Ensure correct data & Ongoing & Ongoing \\
+Creating better architecture & $\leftarrow$ & Complete & 2/5/2026 \\
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
+\section{Sprint 2 Backlog - Semester 2}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_backlog_sem2.png}
+    \caption{Spring 4 Backlog}
+\end{figure}
+
+\end{document}
