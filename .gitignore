@@ -1,5 +1,6 @@
 .vscode
 build/
+book/
 *.xlsx
 *.mp4
 images/ML_term_proj/
