@@ -1,0 +1,300 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+\setclass{IPD}
+\settitle{Smelly Code}
+\setauthors{Mihir Patel, Arjun Sivakumar, Christopher Williams}
+\setheaderauthors{Patel, Sivakumar, Williams}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{aside}{Layout}
+    The layout of this document goes by section, with the specific ``smell'' listed on 
+    the table of contents page for easier navigation. The group member that did what smell 
+    is listed in each section.
+\end{aside}
+
+\tableofcontents
+\newpage
+
+\section{Bloaters}
+
+\textit{Mihir}
+
+\subsection{Large Class}
+
+\begin{description}
+    \item[Location in Code]
+        File: \texttt{Python/SmellAnnotated/Shop.py} \\
+        Class: Shop (overall class; spans multiple methods and fields)
+
+    \item[What is happening here?]
+        The Shop class acts like a ``do everything'' class: it creates pizzas, receives orders,
+        stores customer contact info, sends notifications, applies discounts and loyalty points,
+        and handles complaints---all inside one class.
+
+    \item[Concrete Evidence]
+        The class contains many distinct responsibilities across its methods:
+        \begin{itemize}
+            \item Pizza creation: \texttt{create\_pizza} (lines 23--26)
+            \item Order intake: \texttt{receive\_order} (lines 38--43)
+            \item Customer contact management: \texttt{update\_contact\_info}, \texttt{update\_name},
+                  \texttt{update\_address}, \texttt{update\_phone\_number}, \texttt{update\_email} (lines 45--72)
+            \item Customer notifications: \texttt{notify\_for\_promotion}, \texttt{notify\_for\_discount}, \\
+                  \texttt{notify\_for\_new\_arrivals} (lines 74--86)
+            \item Benefits: \texttt{apply\_discount}, \texttt{apply\_loyalty\_points} (lines 88--96)
+            \item Complaint handling: \texttt{handle\_complaint} (lines 98--109)
+        \end{itemize}
+        Additionally, customer contact fields (\texttt{first\_name}, \texttt{last\_name}, \texttt{address}, \\
+        \texttt{phone\_number}, \texttt{email}) and temporary order fields (\texttt{temp\_discount\_code},
+        \texttt{temp\_order\_note}) are stored directly on Shop. The class also imports and directly
+        coordinates Cashier, Chef, and multiple pizza subclasses (CheesePizza, VeggiePizza,
+        TunaPizza, PepperoniPizza) via \texttt{self.chef}, \texttt{self.casher}, and \texttt{self.pizza}.
+        Key evidence checklist items: has many dependencies/imports; very large class; exposes or
+        relies on internals of another module.
+
+    \item[Why is this risky?]
+        A large class tends to have low cohesion---unrelated concerns are mixed together---making it
+        harder to test and making changes more likely to cause side effects in seemingly unrelated behavior.
+
+    \item[Estimated Change Radius]
+        Around 3--6 files for a typical customer/order flow change: \texttt{Shop.py} plus the classes
+        it coordinates (\texttt{Cashier.py}, \texttt{Chef.py}, \texttt{Pizza.py} or pizza subclasses).
+
+    \item[Impact]
+        More bugs during maintenance because developers must understand many features at once, and
+        slower changes since updates to one feature (like discounts or complaints) are entangled
+        with the same central class.
+
+    \item[Confidence Level]
+        \textbf{High.} The class visibly contains many distinct responsibilities and directly
+        orchestrates multiple other components (Cashier, Chef, multiple pizza subclasses).
+
+    \item[Suggested Refactor]
+        Use Extract Class / responsibility split: move customer contact fields and update methods
+        into a \texttt{CustomerProfile} class, move notification methods into a \\
+        \texttt{Notifier}/\texttt{MarketingService}, and move discount/loyalty logic \\ 
+        into a \texttt{DiscountPolicy}/\texttt{LoyaltyProgram}, leaving Shop to coordinate only
+        high-level order flow.
+\end{description}
+
+\section{Couplers}
+
+\textit{Arjun}
+
+\subsection{Feature Envy}
+
+\begin{description}
+    \item[Location in Code]
+        File: \texttt{shop.py} \\
+        Methods and lines:
+        \begin{itemize}
+            \item \texttt{create\_pizza()}, \texttt{receive\_order()} --- lines 27--42
+            \item \texttt{handle\_complaint()} --- line 79
+            \item \texttt{chain\_of\_methods()} --- line 98
+            \item \texttt{access\_internal\_details()} --- line 113
+        \end{itemize}
+
+    \item[What is happening here?]
+        The Shop class uses features and internal data of multiple other classes (Cashier, Chef,
+        and Pizza) and relies on their internal functions and data more than its own, making Shop
+        deeply coupled with those classes.
+
+    \item[Concrete Evidence]
+        \textbf{Evidence 1:} \texttt{create\_pizza} and \texttt{receive\_order} \\
+         (lines 27--42 of \texttt{shop.py}) instantiate Pizza subclasses directly (\texttt{CheesePizza},
+        \texttt{VeggiePizza}, \texttt{TunaPizza}, \texttt{PepperoniPizza}) based on assumptions
+        about the Pizza inheritance hierarchy, and then delegate to \texttt{self.casher.take\_order}.
+        The logic properly belongs inside the Pizza or Cashier classes.
+
+        \textbf{Evidence 2:} \texttt{access\_internal\_details} (line 113) traverses two levels of
+        object internals---\texttt{self.casher.chef.busy}---to read a private field deep inside
+        Chef via Cashier. This is a textbook Law of Demeter violation. Key evidence checklist items:
+        touches many files for one change; has many dependencies/imports; very large class; breaks
+        tests or features far away from change site; exposes or relies on internals of another module.
+
+    \item[Why is this risky?]
+        Deep coupling means \texttt{shop.py}, \texttt{cashier.py}, \texttt{chef.py}, and
+        \texttt{pizza.py} cannot independently evolve. A change to an internal field or method in
+        \texttt{chef.py} can cause \texttt{shop.py} to crash or behave unexpectedly, making the
+        system fragile and hard to test in isolation.
+
+    \item[Estimated Change Radius]
+        Up to 4 files for a typical change: \texttt{shop.py} plus whichever of \\
+         \texttt{cashier.py}, \texttt{pizza.py}, and \texttt{chef.py} the modified function depends on.
+
+    \item[Impact]
+        Increased defect rates and maintenance costs---unexpected behavior propagates across class
+        boundaries whenever internal data or behavior of a dependency changes.
+
+    \item[Confidence Level]
+        \textbf{Medium.} The dependencies are not deeply convoluted and a few targeted fixes could
+        make Shop more independent, but the Feature Envy smell is clearly present.
+
+    \item[Suggested Refactor]
+        Remove direct reliance on other classes' internals. At minimum, wrap dependencies in
+        try/catch blocks to prevent cascading crashes. Ideally, extract an \texttt{OrderManager}
+        class to consolidate cross-class coordination, and push pizza-creation logic into a factory
+        method on the Pizza hierarchy so Shop no longer needs to know about subclass details.
+\end{description}
+
+\section{Change Preventers}
+
+\textit{Chris}
+
+\subsection{Shotgun Surgery}
+
+\begin{description}
+    \item[Location in Code]
+        Files: \texttt{Cashier.py}, \texttt{Chef.py}, \texttt{Customer.py}, \texttt{Pizza.py}, \texttt{Shop.py} \\
+        Classes: Cashier, Chef, Customer, Pizza, Shop \\
+        Methods: \texttt{update\_contact\_info}, \texttt{update\_name}, \texttt{update\_address}, \\
+        \texttt{update\_phone\_number}, \texttt{update\_email}
+
+    \item[What is happening here?]
+        A group of methods that all address/interact with the same information.
+
+    \item[Concrete Evidence]
+        In all 5 files and classes listed above, each class has the listed methods that all
+        interact with information (name, address, phone number, email) and split the updates
+        to them among \texttt{update\_contact\_info} as well as individual methods that address each
+        individual piece of information. 
+
+        This smell:
+        \begin{itemize}
+            \item Touches many files for one change (large change radius)
+            \item Duplicates logic found elsewhere
+            \item Breaks tests or features far away from change site
+        \end{itemize}
+
+    \item[Why is this risky?]
+        Making one change requires making many smaller changes to many classes, and it
+        splits a single responsibility among many different classes and methods.
+
+    \item[Estimated Change Radius]
+        All 5 classes and methods---around 25 spots in the code in total.
+
+    \item[Impact]
+        Worse organization, more code duplication, and harder maintenance.
+
+    \item[Confidence Level]
+        \textbf{High.} They all have the same code reused doing the same function, split among
+        different classes and methods.
+
+    \item[Suggested Refactor]
+        {Extract class}. Move responsibility to a superclass that all methods could extract/pull
+        from, or create an interface that all classes can use.
+\end{description}
+
+\section{Dispensables}
+
+\textit{Arjun}
+
+\subsection{Duplicate Code}
+
+\begin{description}
+    \item[Location in Code]
+        File: \texttt{chef.py}, lines 46--98 \\
+        Duplicate methods present in \texttt{chef.py} that also exist in \texttt{cashier.py} and \texttt{pizza.py}:
+        \begin{itemize}
+            \item \texttt{update\_contact\_info}, \texttt{update\_name}, \\ 
+            \texttt{update\_address}, \texttt{update\_phone\_number}, \texttt{update\_email}
+            \item \texttt{notify\_for\_promotion}, \texttt{notify\_for\_new\_arrivals}
+            \item \texttt{apply\_discount}, \texttt{apply\_loyalty\_points}
+            \item \texttt{handle\_complaint}, \texttt{ask\_for\_receipt}
+            \item \texttt{another\_unused\_method}, \texttt{yet\_another\_unused\_method}
+        \end{itemize}
+
+    \item[What is happening here?]
+        \texttt{chef.py} contains multiple functions (lines 46--98) that are exact \\
+        copies of code found in \texttt{pizza.py} and \texttt{cashier.py}. These functions make sense in
+        \texttt{cashier.py} (e.g., updating contact info or notifying customers), but have no
+        business belonging to the Chef class.
+
+    \item[Concrete Evidence]
+        \textbf{Evidence 1:} \texttt{update\_contact\_info} at line 46 of \texttt{chef.py} and
+        line 84 of \texttt{cashier.py} are character-for-character identical---same signature,
+        same field assignments (\texttt{self.first\_name}, \texttt{self.last\_name},
+        \texttt{self.address}, \texttt{self.phone\_number}, \texttt{self.email}).
+
+        \textbf{Evidence 2:} \texttt{ask\_for\_receipt} at line 91 of \texttt{chef.py} and
+        line 38 of \texttt{cashier.py} are identical: both simply print
+        \texttt{"Customer is asking for a receipt."} Key evidence checklist items: very large class
+        or very long method; duplicates logic found elsewhere; bypasses architectural layers.
+
+    \item[Why is this risky?]
+        The repeated code reduces modularity and makes the codebase less testable and cohesive,
+        since the same edge cases must be covered for each copy. It also violates the DRY
+        (Don't Repeat Yourself) and YAGNI (You Aren't Gonna Need It) principles, reducing
+        maintainability and testability.
+
+    \item[Estimated Change Radius]
+        Depends on which functions are changed. Modifying duplicate-only code is locally contained,
+        but the Chef class also has core functions used by other classes (e.g., \texttt{Cashier}
+        calls \texttt{self.chef.bake\_pizza} inside \texttt{Cashier.take\_order}), meaning some
+        changes could ripple outward.
+
+    \item[Impact]
+        Testing and maintenance become more difficult as the class grows unnecessarily complex and
+        error-prone. Bug fixes or tests for a given function must be applied to every copy, multiplying
+        time and effort.
+
+    \item[Confidence Level]
+        \textbf{High.} The duplicate code is very clearly a repetitive chunk that serves no purpose
+        and makes no sense under the Chef class.
+
+    \item[Suggested Refactor]
+        Remove the copies of the misplaced functions from \texttt{chef.py}. Responsibility for
+        customer-facing concerns (managing contact details, notifications, discounts) should be
+        moved entirely to \texttt{cashier.py} or a dedicated service class, not duplicated across
+        unrelated classes.
+\end{description}
+
+\section{Object-Oriented Abusers}
+
+\textit{Chris}
+
+\subsection{Refused Bequest}
+
+\begin{description}
+    \item[Location in Code]
+        Files: \texttt{Customer.py}, \texttt{Cashier.py}, \texttt{Chef.py}, \texttt{Pizza.py} \\
+        Classes: Customer, Cashier, Chef, Pizza \\
+        Method: \texttt{refused\_bequest(self)}
+
+    \item[What is happening here?]
+        A method from a superclass that should be overridden in subclasses, but is left empty.
+
+    \item[Concrete Evidence]
+        All 4 files listed above contain a \texttt{refused\_bequest} method that does nothing.
+
+        This smell:
+        \begin{itemize}
+            \item Bypasses architectural layers
+            \item Exposes or relies on internals of another module
+        \end{itemize}
+
+    \item[Why is this risky?]
+        This method is intended to be overridden but is not used in the base class/superclass,
+        indicating the subclasses are inheriting behavior they have no relation to.
+
+    \item[Estimated Change Radius]
+        Every class that contains the \texttt{refused\_bequest} method.
+
+    \item[Impact]
+        Confusion and delays---developers must wonder why a class inherits a method from a
+        superclass that it is not related to and does not use.
+
+    \item[Confidence Level]
+        \textbf{Medium.} The name \texttt{refused\_bequest} and that method going unused make it
+        identifiable, though the intent behind the inheritance is ambiguous.
+
+    \item[Suggested Refactor]
+        Either replace inheritance with delegation, or extract the method out of the superclass
+        into a separate new superclass, and have both the subclass and original superclass
+        inherit from that new superclass instead.
+\end{description}
+
+\end{document}
