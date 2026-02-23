@@ -21,14 +21,122 @@
 
 \section{Sprint 2 Backlog - End of Sprint Status}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_backlog_sem2_updated.png}
+    \caption{Spring 2 Backlog Updated}
+\end{figure}
+
 \section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage tasks.
 
 \section{Sprint Retrospective}
 
+\subsection*{Mara}
+
+I worked on using the ARC, managing to run a basic python code. I also created two versions of
+ data display using Streamlit, modeling possible layouts and UI for the final project. Next sprint 
+ I plan on doing more examples on the ARC, and working more on the website.
+
+\subsection*{Chris}
+
+I continued my work from last week to revisit and understand with a greater depth MWPM 
+and the data that we are embedding to ensure both the data we are using is correct, and that
+ the model can perform as best and as authentically as possible in regards to AlphaQubit. 
+ I also created a chart showcasing MWPM’s Logical Error Rate across different physical qubit 
+ error rates at different code distances to showcase to our mentor to ensure my own 
+ and our understanding as a group.
+
+Next, we will start utilizing Google’s published data to do the same test before beginning to 
+do more model trainings and attempt to replicate Google’s training process and tweak our 
+model. I will revisit the architecture of the model with Arjun and Tzu-Chen and continue 
+to provide data to Mara so that she can create a visualization portfolio of our project.
+
+
+\subsection*{Arjun}
+
+During this sprint, I focused on studying the Google dataset and thoroughly analyzing the AlphaQubit
+ papers to gain a deeper understanding of the transformer architecture, parameter choices, training 
+ setup, and implementation details. I was able to complete the tasks outlined in the Gantt chart for 
+ this phase, while also supporting teammates by helping set up ARC workflows and contributing to 
+ preparation for mentor meetings. A key impediment was the complexity of the dataset, particularly
+  understanding the quantum circuits and underlying error model, which required structured mentor 
+  meetings and team discussions, which clarified several conceptual gaps. No ethical concerns 
+  arose, as we worked strictly with publicly available research data and maintained proper attribution.
+   Overall, the sprint went well in terms of knowledge consolidation and team coordination, and
+    the next phase will focus on fine-tuning the model using the exact parameters, curriculum design, 
+    and implementation details derived from our analysis.
+
+\subsection*{Tzu-Chen}
+
+I completed a study of the Google dataset we’re using. This dataset is a distance-3 surface code 
+with a single round. Each folder includes the circuit and DEM files, which allow us to generate 
+measurement data for both data and ancilla qubits. From the measurement record, we can then 
+compute detection events.
+
+To ensure we understand the full pipeline, I reconstructed the measurement-to-event process
+ step by step. I drew a diagram based on the circuit, identified the mapping between qubits and 
+ measurement indices, and then filled the measurement outcomes into the corresponding rec[ ] 
+ entries. Using the detector definitions in the circuit, I computed each detector outcome via XOR 
+ and also incorporated the sweep terms. This took significant time to establish the relationship 
+ between the raw data and the final detector events, and I’ve built an SOP for it.
+
+Next, I’m starting to design and prepare the dataset splits for pretraining, validation, and testing. 
+My plan is to use the DEM provided by Google as the base model, but modify the error-gate 
+probabilities to generate additional training distributions. In particular, I want the dataset design 
+to cover three key factors:
+
+\begin{enumerate}
+    \item code distance (d = 3 and 5)
+    \item number of rounds (r = 1, 3, 5, ..., 25) and
+    \item measurement basis (bX and bZ)
+\end{enumerate}
+
 \section{Product Backlog (Updated)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint2_product_backlog_sem2_eos.png}
+    \caption{Product Backlog - End of Sprint 2}
+\end{figure}
+
+\begin{aside}{Links}
+For verification, \href{https://docs.google.com/spreadsheets/d/1E0FIjbewFiQXMTeIKEnVrVA3a1QH_6Hv9CjAknl78Ds/edit?gid=1121195217#gid=1121195217}{here} is the link to our Google Sheets. Under the ``Project Backlog'' is the image 
+that is referenced above.
+\end{aside}
+
+\section{Burndown Chart}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/burndown_chart_sprint2_sem2.png}
+    \caption{Burndown Chart as of End of Sprint 2}
+\end{figure}
 
 \section{Issue Tracking}
 
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Comp.} \\ \midrule
+ARC Access & Getting all members access to ARC & Completed & 02/16/2026 \\
+ARC Bottlenecks & Setup, allocations, and constraints & Ongoing & Ongoing \\
+Ensuring data quality & Ensure correct data & Ongoing & Ongoing \\
+Creating better architecture & $\leftarrow$ & Complete & 2/5/2026 \\
+Revising MWPM & Reviewing materials & Ongoing & Ongoing \\
+Google Data Overview & Understanding Google's Data & Completed & 02/19/2026
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
 \section{Sprint 3 Backlog - Semester 2}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_backlog_sem2.png}
+    \caption{Sprint 3 Backlog}
+\end{figure}
 
 \end{document}
