@@ -1,0 +1,336 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{hyperref}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Proposal for CrisisEcho: LLM-Augmented Early Detection\\
+of Local Emergencies from Social Media}
+
+\author{
+\IEEEauthorblockN{Samuel Enam Zih (Leader)}
+\IEEEauthorblockA{
+CS, Virginia Tech\\
+\texttt{samuelez@vt.edu}}
+\and
+\IEEEauthorblockN{Christopher Williams}
+\IEEEauthorblockA{
+CS, Virginia Tech\\
+\texttt{cdw24@vt.edu}}
+\and
+\IEEEauthorblockN{Arjun Sivakumar}
+\IEEEauthorblockA{
+CS, Virginia Tech\\
+\texttt{arjuns8@vt.edu}}
+\and
+\IEEEauthorblockN{Ki Hong Park}
+\IEEEauthorblockA{
+CS, Virginia Tech\\
+\texttt{stevep00@vt.edu}}
+\and
+\IEEEauthorblockN{Shiyi Liu}
+\IEEEauthorblockA{
+CS, Virginia Tech\\
+\texttt{lshiyi25@vt.edu}}
+}
+
+\maketitle
+
+\begin{abstract}
+CrisisEcho is a consumer-facing platform that applies Retrieval-Augmented
+Generation (RAG) and multi-step LLM agents to detect, classify, and summarize
+hyperlocal emergencies from social media in near real-time. Official emergency
+channels routinely lag events by minutes or hours; CrisisEcho closes this gap
+by ingesting candidate social and official feeds, storing data across three
+MongoDB Atlas databases (document, geospatial, vector) plus Redis and AWS S3,
+and running a three-step LangChain agent chain that clusters posts, scores
+severity, and generates plain-language alerts. Alerts are delivered via a
+Next.js frontend with a Leaflet.js interactive map and WebSocket notifications,
+backed by a Go Fiber API. Exact data sources, backend service count, and
+non-core libraries are not fixed and will be finalized based on API
+accessibility and deployment resources available during development.
+\end{abstract}
+
+\begin{IEEEkeywords}
+emergency detection, social media mining, RAG, LLM agents, MongoDB Atlas
+Vector Search, real-time systems, crisis informatics
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Official channels --- 911 dispatch, government sensors, police scanners ---
+frequently lag fast-moving crises by minutes or hours. Ordinary people post
+hyperlocal signals on social media well before any official report: ``Water
+rising fast on my street!'' or ``Heard gunshots near the mall.'' Existing
+tools are keyword-based and fail on indirect language, sarcasm, and regional
+idioms. CrisisEcho replaces rigid keyword matching with semantic RAG-powered
+reasoning, demonstrating four LLM-driven paradigm shifts: text to semantics,
+retrieval to reasoning, vertical to multi-domain, and closed-world to
+open-world generalization.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Imran et al.~\cite{imran2016twitter} and Olteanu et al.~\cite{olteanu2014crisislex}
+established Twitter as a crisis sensor and built foundational lexicons, while
+Middleton et al.~\cite{middleton2014real} showed geotagged posts correlate with
+ground-truth disaster events. Lewis et al.~\cite{lewis2020rag} introduced RAG
+to ground generative models in retrieved evidence, reducing hallucination. Yao
+et al.~\cite{yao2023react} demonstrated chained LLM reasoning steps outperform
+single-prompt approaches, and Karpukhin et al.~\cite{karpukhin2020dense} showed
+dense vector retrieval outperforms BM25 --- motivating our Atlas Vector Search
+hybrid retrieval design.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Data Sources}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\textbf{Note:} The sources below are candidates. The final integrated set will
+be determined during development based on API rate limits, access restrictions,
+and available deployment resources.
+
+\textbf{Social (candidates):} Twitter/X, Reddit, Bluesky, Mastodon, Nextdoor,
+Telegram, Facebook Groups.
+
+\textbf{Official (candidates):} NWS, USGS Earthquake, FEMA, PulsePoint, Waze
+Connected Citizens.
+
+\textbf{News/Crowdsourced (candidates):} GDELT, Patch.com RSS, NewsAPI,
+Ushahidi, Citizen App.
+
+\textbf{Training/Evaluation:} HumAID~\cite{alam2021humaid} (77k tweets),
+CrisisNLP~\cite{imran2016twitter}, CrisisLex~\cite{olteanu2014crisislex},
+Kaggle Disaster Tweets, CrisisMMD, FireFlood Dataset.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{System Architecture}
+% ─────────────────────────────────────────────────────────────────────────────
+
+CrisisEcho runs as a five-layer pipeline (Fig.~\ref{fig:architecture}).
+
+\textbf{Layer 1} platform-specific Python workers publish raw JSON to Aiven for
+Apache Kafka across four topics (\texttt{social\_raw}, \texttt{official\_alerts},
+\texttt{news\_feed}, \texttt{citizen\_reports}).
+
+\textbf{Layer 2} a Python preprocessor applies spaCy cleaning, a cascading
+geocoder (Carmen $\rightarrow$ spaCy NER $\rightarrow$ location DB priors),
+MinHash LSH deduplication, a DistilBERT relevance filter (removes $\approx$70\%
+of posts), Voyage AI text embedding (1024-dim), CLIP image embedding (512-dim),
+and S3 image upload.
+
+\textbf{Layer 3} stores data across five backends (Section~\ref{sec:database}).
+
+\textbf{Layer 4} hybrid retrieval feeds a three-step LangChain LLM agent.
+
+\textbf{Layer 5} a Go Fiber API and Next.js frontend deliver alerts.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{images/CrisisEcho Diagram.pdf}
+\caption{CrisisEcho System Architecture}
+\label{fig:architecture}
+\end{figure*}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Database Architecture}
+\label{sec:database}
+% ─────────────────────────────────────────────────────────────────────────────
+
+MongoDB Atlas M0 (free tier) serves as the unified data platform because a
+single Atlas cluster natively supports document storage, 2dsphere geospatial
+indexing, and Atlas Vector Search --- no separate vector or geospatial service
+required. The free tier is generous for a course project, and Atlas Vector
+Search supports multi-modal vector dimensions per collection.
+
+\textbf{DB 1 --- Main (documents + geospatial).} Collections: \texttt{posts}
+(unified), per-source raw collections (\texttt{twitter\_posts},
+\texttt{reddit\_posts}, etc.), \texttt{clusters}, \texttt{crises},
+\texttt{alerts}, \texttt{subscriptions}, \texttt{official\_alerts}. All
+location fields carry a 2dsphere index. Key \texttt{posts} fields:
+\texttt{post\_id}, \texttt{source}, \texttt{raw\_text}, \texttt{cleaned\_text},
+\texttt{timestamp}, \texttt{location} (GeoJSON Point),
+\texttt{location\_confidence}, \texttt{text\_embedding\_id},
+\texttt{image\_urls} (S3 links), \texttt{cluster\_id}, \texttt{crisis\_type},
+\texttt{severity\_score}, \texttt{metadata.username\_hash} (SHA-256).
+
+\textbf{DB 2 --- Location (geocoding support).} Collections:
+\texttt{geo\_priors}, \texttt{place\_index}, \texttt{location\_cache}
+(TTL-indexed, keyed by SHA-256 text hash). Enables the preprocessing cascade
+to avoid re-geocoding identical text.
+
+\textbf{DB 3 --- Vector (Atlas Vector Search).} Collections:
+\texttt{text\_embeddings} (1024-dim cosine) and \texttt{image\_embeddings}
+(512-dim cosine). Each document carries \texttt{post\_id}, \texttt{timestamp},
+\texttt{lat}, \texttt{lng}, \texttt{crisis\_type}, \texttt{is\_relevant} as
+filterable metadata inside \texttt{\$vectorSearch}.
+
+\textbf{DB 4 --- AWS S3 (media).} Raw images are uploaded to S3
+(\texttt{bucket/<source>/<post\_id>/}); only S3 URLs are stored in MongoDB,
+keeping documents lean.
+
+\textbf{DB 5 --- Redis 7 (cache + Pub/Sub).} 30-minute sliding post window,
+5-minute LLM summary TTL, and \texttt{alerts:live} Pub/Sub channel relaying
+alerts to the Go WebSocket server.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{RAG Pipeline and Evaluation}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Hybrid Retrieval}
+
+Each 60-second trigger issues three concurrent queries: (1) Atlas Vector Search
+on \texttt{text\_embeddings} (top 50 by cosine similarity, filtered by time
+window and bounding box); (2) MongoDB \texttt{\$near} on \texttt{posts}
+(geographic proximity regardless of semantics); (3) \texttt{official\_alerts}
+lookup injected as high-authority context. Unresolved posts are enriched via
+location DB geo priors. Results are merged, deduplicated, and ranked:
+$0.5 \times \text{vec} + 0.3 \times \text{recency} + 0.2 \times \text{authority}$.
+
+\subsection{Three-Step LLM Agent}
+
+Claude Haiku (primary) or Ollama Llama3 (fallback) executes: \textbf{Step 1}
+cluster posts into distinct events (JSON output); \textbf{Step 2} score
+severity 1--5 with rationale; \textbf{Step 3} generate a 2--3 sentence public
+alert with no PII. Publish threshold: severity $\geq$ 3, $\geq$ 3 independent
+contributors from $\geq$ 2 platforms, geocoding confidence above minimum.
+
+\subsection{Evaluation}
+
+Compared against a CrisisLex keyword baseline on the same corpus. Targets:
+Precision@K $>$ 0.75, Recall $>$ 0.70, end-to-end latency $<$ 90s, FPR $<$ 0.20,
+geocoding accuracy $>$ 0.80, F1 improvement $>$ 15 pp. Ground truth:
+HumAID/CrisisNLP test splits (offline) + PulsePoint/NWS active alerts (online).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Technology Stack}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Table~\ref{tab:techstack} lists the confirmed core stack. Non-core libraries
+and auxiliary tooling are subject to change during development. Backend service
+count may be adjusted based on implementation decisions.
+
+\begin{table}[h]
+\caption{CrisisEcho Core Technology Stack}
+\label{tab:techstack}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{1.4cm} p{2.0cm} p{4.2cm}}
+\toprule
+\textbf{Component} & \textbf{Technology} & \textbf{Rationale} \\
+\midrule
+Backend & Go (Fiber) & High throughput; goroutine WebSocket delivery \\
+AI Pipeline & Python + LangChain & LLM/NLP ecosystem; LCEL agent chains \\
+Frontend & Next.js + Leaflet.js & SSR support; geospatial map \\
+Main DB & MongoDB Atlas M0 & 2dsphere geospatial; free cloud tier \\
+Location DB & MongoDB Atlas M0 & Geocoding cache + geo priors \\
+Vector DB & Atlas Vector Search & Multi-modal ANN; no extra service \\
+Media & AWS S3 & Image storage; URLs only in MongoDB \\
+Cache & Redis 7 & Post window; LLM TTL; WS relay \\
+Queue & Aiven Kafka & Managed Kafka; decouples ingestion \\
+LLM & Claude Haiku / Llama3 & Cost-efficient; free offline fallback \\
+Deploy & GCP Cloud Run & Serverless; free-tier prototype \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{thebibliography}{00}
+
+\bibitem{imran2016twitter}
+M. Imran, P. Mitra, and C. Castillo, ``Twitter as a lifeline: Human-annotated
+Twitter corpora for NLP of crisis-related messages,'' in \textit{Proc. LREC},
+2016.
+
+\bibitem{olteanu2014crisislex}
+A. Olteanu, C. Castillo, F. Diaz, and S. Vieweg, ``CrisisLex: A lexicon for
+collecting and filtering microblogged communications in crises,'' in
+\textit{Proc. ICWSM}, 2014.
+
+\bibitem{alam2021humaid}
+F. Alam, F. Sajjad, H. Dalvi, N. Durrani, K. Darwish, and P. Nakov, ``HumAID:
+Human-annotated disaster incidents data from Twitter with deep learning
+benchmarks,'' in \textit{Proc. ICWSM}, 2021.
+
+\bibitem{middleton2014real}
+S. E. Middleton, L. Middleton, and S. Modafferi, ``Real-time crisis mapping of
+natural disasters using social media,'' \textit{IEEE Intelligent Systems},
+vol. 29, no. 2, pp. 9--17, 2014.
+
+\bibitem{lewis2020rag}
+P. Lewis et al., ``Retrieval-augmented generation for knowledge-intensive NLP
+tasks,'' in \textit{Proc. NeurIPS}, 2020.
+
+\bibitem{yao2023react}
+S. Yao et al., ``ReAct: Synergizing reasoning and acting in language models,''
+in \textit{Proc. ICLR}, 2023.
+
+\bibitem{karpukhin2020dense}
+V. Karpukhin et al., ``Dense passage retrieval for open-domain question
+answering,'' in \textit{Proc. EMNLP}, 2020.
+
+\end{thebibliography}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\appendix
+% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Team Role Summary}
+
+\begin{table}[h]
+\caption{Team Role Summary}
+\label{tab:roles}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{2.0cm} p{5.8cm}}
+\toprule
+\textbf{Member} & \textbf{Responsibilities} \\
+\midrule
+S. Zih (Leader) & Backend: AI/DB/API/Docker; Frontend: map; Report: contribution \\
+A. Sivakumar & Backend: ingestion/Kafka; Frontend: map UI --- markers, pin drawer; Report: contribution \\
+Ki Hong Park & Backend: WebSocket, NLP, Redis; Frontend: query bar, notifications; Report: contribution \\
+Shiyi Liu & Backend: evaluation, ablations; Frontend: results display, data QC; Report: proof and submission \\
+C. Williams & Frontend: UI/UX, dashboard, diagrams; Backend: deployment, ethics; Report: lead and integration \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Project Schedule}
+
+\begin{table}[h]
+\caption{Project Schedule (13 Weeks)}
+\label{tab:schedule}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{1.0cm} p{6.4cm}}
+\toprule
+\textbf{Weeks} & \textbf{Milestone} \\
+\midrule
+1--2 & Literature review; provision Atlas, Aiven Kafka, Redis; define schemas \\
+3--4 & Ingestion workers; spaCy + geocoding; DistilBERT fine-tune; embeddings to Atlas Vector Search \\
+5--6 & Hybrid retrieval; LangChain 3-step agent; Haiku + Llama3 fallback \\
+7--8 & Cluster persistence; Redis Pub/Sub; Go Fiber REST + WebSocket API \\
+9--10 & Next.js frontend; evaluation suite; keyword baseline comparison \\
+11--12 & Stretch features; system testing; latency and threshold tuning \\
+13 & Prompt refinement; documentation; demo; final report and submission \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Acknowledgment}
+
+All architectural and design decisions were made by the project team.
+
+\end{document}

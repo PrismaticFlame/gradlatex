@@ -1,0 +1,973 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{tabularx}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Proposal for CrisisEcho: LLM-Augmented Early Detection\\
+of Local Emergencies from Social Media}
+
+\author{
+\IEEEauthorblockN{Samuel Enam Zih}
+\IEEEauthorblockA{
+Computer Science\\
+Virginia Tech\\
+Alexandria, VA, USA\\
+\texttt{szih@vt.edu}\\
+(LEADER)}
+\and
+\IEEEauthorblockN{Christopher Drake Williams}
+\IEEEauthorblockA{
+Computer Science\\
+Virginia Tech\\
+Alexandria, VA, USA\\
+\texttt{cdwilliams@vt.edu}}
+\and
+\IEEEauthorblockN{Arjun Sivakumar}
+\IEEEauthorblockA{
+Computer Science\\
+Virginia Tech\\
+Alexandria, VA, USA\\
+\texttt{arjuns@vt.edu}}
+\and
+\IEEEauthorblockN{Ki Hong Park}
+\IEEEauthorblockA{
+Computer Science\\
+Virginia Tech\\
+Alexandria, VA, USA\\
+\texttt{kihong@vt.edu}}
+\and
+\IEEEauthorblockN{Shiyi Liu}
+\IEEEauthorblockA{
+Computer Science\\
+Virginia Tech\\
+Alexandria, VA, USA\\
+\texttt{shiyiliu@vt.edu}}
+}
+
+\maketitle
+
+\begin{abstract}
+This project proposes CrisisEcho, a consumer-facing application that leverages
+Retrieval-Augmented Generation (RAG) and large language model (LLM) agents to
+detect, classify, and summarize hyperlocal emergencies from multi-source social
+media streams in near real-time. Traditional emergency response systems rely
+almost exclusively on official channels such as 911 dispatch, government sensors,
+and police scanners, which frequently lag actual events by minutes or hours.
+CrisisEcho addresses this gap by ingesting posts from Twitter/X, Reddit,
+Bluesky, Mastodon, Nextdoor, and Telegram alongside corroborating signals from
+official feeds including the National Weather Service (NWS), USGS Earthquake
+Hazards, FEMA OpenFEMA, PulsePoint, and GDELT. The system stores processed
+posts in MongoDB Atlas using native 2dsphere geospatial indexing, and uses a
+Pinecone-hosted vector index for payload-filtered semantic retrieval. A three-step
+LLM agent chain performs event clustering, severity scoring, and natural-language
+alert generation. Results are delivered through a React web application featuring
+a Leaflet.js interactive map with color-coded crisis hotspots, a pin detail panel,
+a WebSocket real-time notification engine, and a natural-language query interface.
+The backend is built in Go for high-throughput concurrent alert delivery, while
+the AI pipeline runs in Python using LangChain and Sentence-Transformers. The
+system is fully containerized with Docker Compose and deployed on GCP Cloud Run.
+This project demonstrates how LLMs transform relational and document stores into
+open-world, semantically reasoning systems capable of detecting crises from noisy,
+unstructured, human-generated text.
+\end{abstract}
+
+\begin{IEEEkeywords}
+emergency detection, social media mining, retrieval-augmented generation,
+large language models, geospatial databases, MongoDB, real-time systems,
+crisis informatics, hyperlocal awareness
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Motivation}
+
+Traditional emergency response systems rely almost entirely on official channels,
+including 911 calls, government sensors, and police scanners. These channels
+frequently arrive minutes or even hours after a crisis begins. In fast-moving
+events such as flash floods, active shooter situations, widespread power outages,
+or natural disasters, those delays can have life-threatening consequences.
+
+In today's connected world, ordinary people are frequently the first witnesses,
+posting real-time signals on social media before any official report is filed.
+Real-world examples of such posts include statements such as ``Water rising fast
+on my street in Leesburg — cars already stuck!'', ``Heard multiple gunshots near
+Leesburg Outlet Mall, everyone running'', ``My basement is turning into a pool
+lmao — serious flooding on Maple Ave'', and ``Sounds like fireworks but way too
+many — near the mall.'' These posts contain the earliest, most hyperlocal clues
+about emerging crises, typically appearing before official reports are issued.
+
+\subsection{Problem Statement}
+
+Existing monitoring tools, both commercial and research prototypes, are
+predominantly keyword-based. They scan for exact terms such as ``flood'' or
+``gunshots.'' This approach has three critical failure modes. First, it misses
+nuance and context, such as indirect crisis signals expressed in colloquial or
+figurative language. Second, it struggles with sarcasm, slang, and regional
+expressions. Third, it generates both false negatives, missing real events, and
+false positives, flooding operators with noise, making such systems unreliable
+for timely action.
+
+Furthermore, most existing crisis monitoring tools are designed for professional
+emergency management operators, not everyday citizens. There is no widely
+accessible consumer application that synthesizes multi-source social signals,
+applies LLM-based semantic reasoning, and delivers plain-language, map-based
+crisis alerts to the general public.
+
+\subsection{Significance}
+
+CrisisEcho directly demonstrates how large language models are transforming
+database systems, as highlighted in the course material. The system instantiates
+four key paradigm shifts. In the dimension of Text to Semantics, semantic
+understanding capabilities allow the system to discern nuances, context, and
+subtleties that traditional keyword-based data management cannot. In the dimension
+of Retrieval to Reasoning, multi-step LLM agent chains perform event clustering,
+severity assessment, and alert generation far beyond simple lookup retrieval.
+In the dimension of Vertical Domains to Multiple Domains, the pipeline is
+extensible from crisis detection to positive community event detection without
+schema changes. In the dimension of Closed World to Open World, the system
+generalizes to evolving, unstructured real-world language without rigid schemas
+or vocabulary lists.
+
+By building CrisisEcho as a consumer-facing app, the project directly puts
+earlier, more intelligent crisis awareness in the hands of everyday people,
+supporting faster community coordination and personal safety decision-making.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Literature Review: Social Media Crisis Detection}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Social Media as a Crisis Sensor}
+
+Social media platforms have been extensively studied as real-time data sources
+for crisis detection and humanitarian response. Imran et al.~\cite{imran2016twitter}
+demonstrated that Twitter contains actionable crisis-related content during
+disasters and developed large-scale annotated corpora (CrisisNLP, HumAID) to
+train classification models at scale. Olteanu et al.~\cite{olteanu2014crisislex}
+introduced CrisisLex, a lexicon for collecting and filtering microblogged
+communications during crises, establishing a foundational vocabulary approach
+that CrisisEcho supersedes with semantic embeddings.
+
+Middleton et al.~\cite{middleton2014real} demonstrated real-time crisis mapping
+from social media, showing that geographically tagged social posts correlate
+strongly with ground-truth disaster events. Kryvasheyeu et al.~\cite{kryvasheyeu2016rapid}
+showed that social media activity can provide rapid damage assessment during
+natural disasters, validating social signals as a credible early-warning source.
+
+\subsection{Limitations of Keyword-Based Approaches}
+
+The primary limitation of existing systems is their reliance on fixed vocabulary
+matching. Such approaches consistently fail to detect crisis signals expressed
+through indirect language, regional idioms, or evolving slang. Alam et
+al.~\cite{alam2021humaid} established benchmarks showing that even fine-tuned
+classification models trained on labeled crisis data struggle to generalize to
+novel crisis types or geographic regions, motivating the open-world approach
+taken by CrisisEcho.
+
+\subsection{Machine Learning in Crisis Informatics}
+
+Nguyen et al.~\cite{nguyen2017robust} proposed convolutional neural networks
+(CNNs) for identifying valuable crisis-related information from tweets,
+demonstrating improvement over keyword baselines. More recently, transformer-based
+models have become the dominant architecture. Alam et al.~\cite{alam2021humaid}
+showed that BERT-based classifiers trained on HumAID achieve strong F1 scores
+across multiple crisis event types and classification tasks including crisis
+type identification, humanitarian category labeling, and informativeness scoring.
+
+CrisisEcho extends this line of work by replacing single-step classification
+with a multi-step LLM agent reasoning chain, enabling not only detection but
+also event clustering, severity scoring, and actionable alert generation in a
+single unified pipeline.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Literature Review: LLMs, RAG, and Geospatial Database Systems}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Retrieval-Augmented Generation}
+
+Lewis et al.~\cite{lewis2020rag} introduced Retrieval-Augmented Generation (RAG)
+as a framework for combining dense retrieval with generative language models,
+enabling models to ground their outputs in retrieved evidence. This approach is
+central to CrisisEcho: rather than relying on LLM parametric knowledge alone,
+the agent retrieves semantically similar recent posts as context before generating
+a crisis assessment. This grounding reduces hallucination and anchors the LLM
+output to real, timestamped evidence.
+
+\subsection{LLM Agents and Multi-Step Reasoning}
+
+Recent work on LLM agents, including the ReAct framework~\cite{yao2023react}
+and LangChain orchestration, has demonstrated that chaining multiple LLM calls
+with intermediate reasoning steps significantly outperforms single-prompt
+approaches on complex analytical tasks. CrisisEcho applies a three-step agent
+chain: event clustering, severity scoring with rationale, and natural-language
+alert generation. This decomposition mirrors the cognitive process of a human
+emergency analyst while operating at machine speed.
+
+\subsection{Geospatial Database Systems}
+
+MongoDB's native 2dsphere indexing supports GeoJSON geometries and enables
+efficient geospatial queries including \texttt{\$near} (posts within radius of
+a point), \texttt{\$geoWithin} (posts inside a polygon), and
+\texttt{\$geoIntersects} (overlapping geometries). This eliminates the need for
+PostGIS as a separate extension and simplifies the deployment stack. Geospatial
+indexing in document databases has been shown to scale efficiently to millions
+of geotagged records with sub-100ms query latency~\cite{mongodb2023geo},
+meeting the real-time requirements of CrisisEcho.
+
+\subsection{Vector Search and Hybrid Retrieval}
+
+Karpukhin et al.~\cite{karpukhin2020dense} demonstrated that dense passage
+retrieval using bi-encoder models significantly outperforms BM25 keyword
+retrieval for open-domain question answering, motivating the use of dense
+vector search in CrisisEcho. Pinecone's hosted vector index provides
+Approximate Nearest Neighbor (ANN) search via HNSW with metadata filtering,
+enabling combined vector similarity plus geographic bounding box queries in a
+single retrieval step. Unlike other free-tier vector database options, Pinecone's
+Starter plan provides persistent storage with no inactivity-based deletion,
+making it appropriate for a semester-long course project.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Literature Review: Geolocation from Unstructured Text}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Text-Based Geocoding}
+
+A fundamental challenge in social media crisis detection is that fewer than 2\%
+of tweets carry GPS coordinates~\cite{middleton2014real}. The Carmen
+geocoder~\cite{dredze2013carmen} addresses this by extracting location
+references from post text, user profile location fields, and time zone
+metadata, achieving reasonable precision on English-language social media.
+spaCy's Named Entity Recognition (NER) pipeline provides a complementary
+approach by identifying place names, neighborhood references, and
+intersection descriptions in post text.
+
+CrisisEcho implements a cascading geocoding strategy: GPS metadata (when
+available) takes highest priority, followed by Carmen extraction, spaCy NER,
+user profile location, and finally a batch inference step that uses nearby
+geotagged posts as geographic priors for posts with no extractable location.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Dataset Description}
+% ─────────────────────────────────────────────────────────────────────────────
+
+CrisisEcho uses a multi-layered data collection strategy spanning social media
+platforms, official government and emergency APIs, crowdsourced citizen platforms,
+and labeled research datasets. All sources are either publicly available APIs,
+academic datasets compliant with their respective terms of use, or public-facing
+social media streams accessible under standard research guidelines.
+
+\subsection{Social Media Platforms --- Live Streaming}
+
+\textbf{Twitter/X} is accessed via Tweepy filtered stream for live ingestion
+and supplemented by historical academic datasets (CrisisNLP, HumAID, Kaggle
+Disaster Tweets) for training and evaluation. Twitter/X provides broad
+real-time crisis signals and is the most studied platform in crisis informatics.
+
+\textbf{Reddit} is accessed via PRAW streaming from relevant local subreddits
+(r/Virginia, r/nova, r/news, r/Alexandria, r/leesburg) and supplemented by
+Pushshift historical dumps. Reddit posts are longer-form and often verified by
+community upvotes, making them a high-value source for geographically attributed
+crisis reports.
+
+\textbf{Bluesky} is accessed through the AT Protocol public firehose, which
+imposes no rate limits and provides a fully open stream of public posts. Bluesky
+is a growing platform with active local community usage and represents a
+rate-limit-free alternative to Twitter/X.
+
+\textbf{Mastodon} is accessed through instance-level API streams. As a
+decentralized federated network, Mastodon provides open access to public
+timelines without the restrictive API policies of centralized platforms.
+
+\textbf{Nextdoor} public posts are collected via structured web scraping of
+neighborhood feeds. Nextdoor provides extremely hyperlocal signals at the
+street and block level, making it the highest-resolution geographic source
+in the pipeline.
+
+\textbf{Telegram} public emergency channels and local news channels are
+ingested using the Telethon Python library. Many local emergency groups,
+neighborhood channels, and breaking news accounts publish real-time incident
+reports via Telegram.
+
+\textbf{Facebook Groups} public post content is accessed via the Graph API
+for public group posts. Large local community groups frequently serve as
+informal crisis reporting forums.
+
+\subsection{Official Government and Emergency APIs}
+
+\textbf{National Weather Service (NWS)} provides a free REST API at
+weather.gov delivering real-time weather alerts, severe weather warnings,
+and flood advisories by geographic location. NWS alerts serve as official
+corroboration signals that the LLM agent uses to increase the severity score
+of social media clusters reporting weather-related events.
+
+\textbf{USGS Earthquake Hazards API} provides free real-time earthquake data
+with sub-minute latency. USGS signals cross-validate social posts reporting
+shaking, building damage, or loud rumbling noises.
+
+\textbf{FEMA OpenFEMA API} provides free access to historical disaster
+declaration records and flood zone data. These are used primarily for labeling
+training data and providing geographic context on historically high-risk areas.
+
+\textbf{Waze Connected Citizens Program} makes real-time accident and road
+closure data available through a public data feed, providing additional incident
+corroboration for traffic-related crisis signals.
+
+\textbf{PulsePoint} exposes live 911 dispatch incident data in participating
+jurisdictions through an API reverse-engineered by the developer community.
+PulsePoint data provides near-ground-truth labels for active incidents,
+enabling both real-time corroboration and offline evaluation.
+
+\subsection{Crowdsourced and Citizen Platforms}
+
+\textbf{Ushahidi} public datasets from past global crisis deployments provide
+labeled incident reports from real-world emergencies. These datasets supplement
+the Twitter-centric training data with non-Twitter crisis signal examples.
+
+\textbf{Citizen App} public incident feeds are accessed through web scraping
+of the public-facing incident map. Citizen posts are directly tied to 911
+dispatch data and provide strong ground-truth labels for model evaluation.
+
+\textbf{GDELT Project} monitors global news media in near real-time and
+publishes free bulk data and streaming API access. GDELT cross-references
+local news signals at massive scale, providing a high-recall supplementary
+source for identifying events that have been picked up by local news but
+not yet widely posted on social media.
+
+\textbf{Patch.com} RSS feeds provide hyperlocal news by locality. Patch covers
+fires, accidents, power outages, and other incidents in suburban communities
+at a geographic granularity well-matched to CrisisEcho's Northern Virginia focus.
+
+\textbf{NewsAPI} and \textbf{MediaStack} free-tier REST APIs aggregate news
+sources filterable by location and keyword, supporting both near-real-time
+signal collection and offline ground-truth labeling of crisis events.
+
+\subsection{Labeled Research Datasets for Training and Evaluation}
+
+The following publicly available datasets are used for model training,
+fine-tuning, and offline evaluation:
+
+\begin{itemize}
+    \item \textbf{HumAID}~\cite{alam2021humaid}: 77,000 tweets across 19 disaster
+    events, annotated for crisis type, informativeness, and humanitarian category.
+    \item \textbf{CrisisNLP}~\cite{imran2016twitter}: Multi-event annotated
+    Twitter dataset across dozens of real-world crises with fine-grained labels.
+    \item \textbf{CrisisLex}~\cite{olteanu2014crisislex}: Curated lexicon plus
+    labeled tweet collections from multiple crisis events.
+    \item \textbf{Kaggle Disaster Tweets}: Binary relevance-labeled tweets from
+    a widely used NLP competition dataset.
+    \item \textbf{CrisisMMD}: Multimodal dataset combining text and images for
+    crisis classification tasks across four annotation dimensions.
+    \item \textbf{FireFlood Dataset}: Labeled social media posts specific to fire
+    and flood events, providing event-type-specific training examples.
+    \item \textbf{ISCRAM Datasets}: Multiple labeled corpora from the Information
+    Systems for Crisis Response and Management conference proceedings.
+\end{itemize}
+
+\subsection{Data Limitations}
+
+Potential limitations of the described sources include the following. Nextdoor
+and Facebook scraping may be blocked by platform anti-scraping measures,
+requiring fallback to open-platform alternatives. Fewer than 2\% of Twitter
+posts carry GPS coordinates, requiring text-based geocoding with inherent
+uncertainty. PSM and BSM signals from connected infrastructure are not
+available in the Northern Virginia region at the time of writing. Patch.com
+and GDELT may have latency of several minutes before news articles are
+indexed, limiting their utility as real-time signals compared to social media
+streams. Despite these limitations, the combined source portfolio provides
+sufficient signal density and redundancy for reliable early-warning detection
+across the Northern Virginia and DC metro study area.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Proposed Approaches}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Multi-Source Ingestion with Kafka}
+
+All data sources feed into a Kafka message broker that decouples ingestion from
+processing. Separate Kafka topics are maintained for each source class:
+\texttt{social\_raw} for all social media platforms, \texttt{official\_alerts}
+for NWS, USGS, FEMA, and PulsePoint feeds, \texttt{news\_feed} for GDELT,
+Patch, and NewsAPI, and \texttt{citizen\_reports} for Ushahidi and Citizen App.
+Go consumers read from each topic and trigger the Python preprocessing service
+via internal REST calls. For batch historical datasets (HumAID, CrisisNLP), a
+Go replay worker simulates streaming at a configurable throughput rate to enable
+end-to-end pipeline testing.
+
+\subsection{Semantic Pre-filtering with DistilBERT}
+
+Before any post enters the vector index or LLM pipeline, a lightweight
+DistilBERT classifier fine-tuned on HumAID performs binary relevance
+classification. This pre-filter discards approximately 70\% of incoming posts
+as off-topic, reducing the volume of embeddings generated and LLM API calls
+required. Only posts passing the relevance threshold proceed to geocoding and
+embedding.
+
+\subsection{Hybrid Geospatial and Vector Retrieval}
+
+For each periodic trigger (every 60 seconds or on significant volume spike),
+the retrieval module issues a hybrid query combining three concurrent lookups.
+First, a Pinecone ANN search retrieves the top 50 semantically similar posts
+from the last two hours filtered by geographic bounding box. Second, a MongoDB
+\texttt{\$near} query retrieves all posts within a configurable radius of the
+trigger centroid that may have low semantic similarity but share geographic
+proximity. Third, any active official alerts from NWS, USGS, or PulsePoint
+in the same area are retrieved from MongoDB and injected as high-authority
+context documents. The three result sets are merged and de-duplicated before
+being passed to the LLM agent.
+
+\subsection{Three-Step LLM Agent Chain}
+
+The core reasoning pipeline is implemented as a three-step LangChain agent
+chain. In step one, the agent receives the merged retrieval results as context
+and performs event clustering, identifying distinct real-world events being
+described across the posts and producing a structured JSON output specifying
+event type, location description, estimated time, contributing post identifiers,
+and a confidence score. In step two, the agent assesses cluster severity on a
+1--5 scale considering language urgency, count of independent reporters,
+cross-platform corroboration, and presence of any official corroborating alert.
+The agent outputs both a numeric severity score and a two-sentence rationale.
+In step three, the agent generates a two-to-three sentence plain-language alert
+for public consumption, ensuring no personally identifiable information appears
+in the output and appending a source platform attribution list.
+
+\subsection{Severity Thresholding and Notification}
+
+Alerts are only published to the notification system when the cluster satisfies
+three conditions simultaneously: the LLM-assigned severity score is 3 or higher
+on the 1--5 scale, the cluster contains at least three independent post
+contributors from at least two distinct platforms, and the cluster centroid
+geocoding confidence exceeds a minimum threshold. This multi-condition filter
+substantially reduces notification fatigue compared to single-threshold systems.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{System Architecture}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Architecture Overview}
+
+CrisisEcho is structured as a five-layer pipeline. Layer one handles
+multi-source ingestion through Kafka. Layer two performs NLP preprocessing
+and enrichment in Python. Layer three provides hybrid storage across MongoDB
+Atlas, Pinecone, and Redis. Layer four executes the RAG-powered LLM reasoning
+agent. Layer five delivers alerts and interactive visualizations through the
+Go API and React frontend.
+
+The system architecture diagram is provided below.
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=\textwidth]{images/CrisisEcho Diagram.pdf}
+\caption{CrisisEcho System Architecture}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection{Layer 1: Ingestion and Streaming}
+
+Platform-specific ingestion workers are implemented in Python using
+Tweepy (Twitter/X), PRAW (Reddit), the AT Protocol Python SDK (Bluesky),
+Telethon (Telegram), and standard HTTP clients (NWS, USGS, GDELT, NewsAPI,
+Patch RSS). Each worker publishes raw post objects as JSON to the appropriate
+Kafka topic. Kafka consumer groups in Go handle backpressure and provide
+at-least-once delivery guarantees. Dead-letter queues capture malformed or
+oversized messages for offline inspection.
+
+\subsection{Layer 2: Preprocessing and Enrichment}
+
+A Python microservice consumes from the \texttt{social\_raw} and related
+Kafka topics and applies the following sequential steps. Text cleaning
+uses a spaCy pipeline with custom components for URL removal, emoji normalization
+(optionally retained as sentiment signal), and whitespace normalization.
+Geocoding applies Carmen as the primary extractor followed by spaCy NER for
+location entity identification. If neither method yields a location, the post is
+tagged as \texttt{location:unresolved} and held for batch geo-inference using
+nearby geotagged posts as geographic priors. Near-duplicate detection uses
+MinHash LSH via the datasketch library with a Jaccard similarity threshold of
+0.85 and a five-minute deduplication window. Relevance pre-filtering applies
+the DistilBERT classifier. Embedding generation uses the
+\texttt{all-MiniLM-L6-v2} Sentence-Transformers model to produce 384-dimensional
+dense vectors, configurable to \texttt{all-mpnet-base-v2} for higher accuracy
+at the cost of throughput.
+
+\subsection{Layer 3: Hybrid Storage}
+
+\subsubsection{MongoDB Atlas (Primary Document and Geospatial Store)}
+
+MongoDB Atlas free tier M0 serves as the primary document and geospatial store.
+All post documents, cluster records, and alert records are stored in MongoDB.
+The \texttt{posts} collection uses a 2dsphere index on the GeoJSON
+\texttt{location} field to enable efficient geospatial queries. The
+\texttt{clusters} collection stores both a centroid point and a convex hull
+polygon for each detected crisis cluster. The \texttt{alerts} collection
+maintains a full audit trail including which posts contributed to each alert
+and the LLM-generated rationale.
+
+\subsubsection{Pinecone (Vector Index)}
+
+Pinecone's hosted free Starter plan provides a persistent vector index with
+support for up to 100,000 vectors and one index at no cost. Unlike Qdrant Cloud
+or Weaviate Cloud sandbox tiers, Pinecone's Starter plan does not expire
+due to inactivity, ensuring that embeddings accumulated during Phase 1 remain
+accessible throughout the project duration. The Pinecone index stores one vector
+per processed post with payload metadata fields for post identifier, timestamp,
+latitude, longitude, source platform, and crisis type, enabling combined ANN
+search plus metadata filtering in a single query. The Python
+\texttt{pinecone-client} library handles all vector operations; the Go API
+queries Pinecone via its REST API at inference time.
+
+\subsubsection{Redis (Hot Cache and Pub/Sub)}
+
+Redis stores the sliding window of the most recent 30 minutes of processed
+posts as a sorted set indexed by timestamp. LLM-generated cluster summaries
+are cached with a five-minute TTL to prevent redundant API calls for
+geographically overlapping retrieval queries. The Redis Pub/Sub channel
+\texttt{alerts:live} carries new alert events from the Python agent to the Go
+API server, which relays them to connected React clients over WebSocket.
+
+\subsection{Layer 4: RAG Pipeline and LLM Agent}
+
+The RAG pipeline is implemented in Python using LangChain for agent
+orchestration and LlamaIndex for document loading and context window
+management. The LLM backend is Claude claude-haiku-4-5 (primary, optimized for
+speed and cost) with Ollama-hosted Llama3 as a configurable free fallback
+for offline or budget-constrained operation. The agent is stateless; all
+relevant context is included in each API call as retrieved documents.
+New cluster documents are written back to MongoDB upon successful completion
+of all three agent steps, and a Redis Pub/Sub message is published to trigger
+downstream alert delivery.
+
+\subsection{Layer 5: Go API and React Frontend}
+
+The Go backend uses the Fiber HTTP framework and exposes the following REST
+endpoints. \texttt{GET /api/hotspots} accepts latitude, longitude, and radius
+parameters and returns all active crisis clusters within the specified area.
+\texttt{GET /api/pin} returns detailed cluster information for a user-dropped
+map pin including the LLM summary, contributing posts, timeline, and source
+breakdown. \texttt{POST /api/subscribe} stores user notification preferences
+(location, crisis type filters, radius). \texttt{GET /api/query} accepts a
+natural-language text query, routes it to the LLM agent with a specialized
+digest prompt, and returns a structured response. \texttt{GET /ws/alerts}
+is a WebSocket endpoint that streams new alert events to connected clients
+using Redis Pub/Sub as the backend message bus.
+
+The React frontend uses TypeScript and react-leaflet for the interactive map.
+Crisis hotspots are rendered as circle markers sized proportionally to severity
+score and colored by crisis type (red for life-safety, orange for
+infrastructure, yellow for traffic, green for positive events in the stretch
+goal). A slide-up pin detail drawer shows the LLM summary, a Recharts timeline
+of post volume over time, anonymized post excerpts with source labels, and
+cross-platform corroboration indicators. A WebSocket hook subscribes to
+\texttt{/ws/alerts} and renders toast notifications for new high-severity events.
+A natural-language query bar allows users to type questions such as ``What is
+happening near Dulles right now?'' and receive an LLM-generated digest.
+
+\subsection{Infrastructure and Deployment}
+
+All services are defined in a single Docker Compose file for local development
+and end-to-end testing. Production deployment targets GCP Cloud Run, which
+provides serverless container hosting with a generous free tier. MongoDB Atlas
+and Pinecone are externally hosted and require no infrastructure management.
+The Go API and Python preprocessing service are containerized separately,
+enabling independent scaling. The React frontend is built to a static bundle
+and hosted on Firebase Hosting or GCP Cloud Storage.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Database Schema Design}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{MongoDB: posts Collection}
+
+Each document in the \texttt{posts} collection contains the following fields.
+The \texttt{\_id} field is a MongoDB ObjectId. The \texttt{post\_id} field is
+a string in the format \texttt{platform:native\_id}
+(e.g., \texttt{twitter:1234567890}). The \texttt{source} field identifies
+the platform. The \texttt{raw\_text} and \texttt{cleaned\_text} fields store
+the original and preprocessed content respectively. The \texttt{timestamp}
+field is an ISODate. The \texttt{location} field is a GeoJSON Point object
+\texttt{\{type: "Point", coordinates: [lng, lat]\}} covered by a 2dsphere index.
+The \texttt{location\_confidence} is a float from 0 to 1 indicating geocoding
+certainty. The \texttt{location\_source} field identifies whether the location
+was derived from GPS, Carmen, NER, user profile, or inference. The
+\texttt{embedding\_id} field references the corresponding Pinecone vector.
+The \texttt{cluster\_id} is a nullable ObjectId referencing the
+\texttt{clusters} collection. The \texttt{crisis\_type} field is a nullable
+categorical string from the set: flood, shooting, outage, fire, accident,
+earthquake, or null. The \texttt{severity\_score} is an integer from 1 to 5.
+The \texttt{is\_relevant} field is a boolean output of the DistilBERT pre-filter.
+The \texttt{metadata} subdocument stores a hashed username and platform-specific
+metadata.
+
+\subsection{MongoDB: clusters Collection}
+
+Each document in the \texttt{clusters} collection contains the following fields.
+The \texttt{centroid} field is a GeoJSON Point covered by a 2dsphere index. The
+\texttt{affected\_area} field is a GeoJSON Polygon representing the convex hull
+of all contributing post locations. The \texttt{crisis\_type}, \texttt{severity},
+and \texttt{severity\_rationale} fields store the LLM agent outputs from step
+two of the reasoning chain. The \texttt{summary} field stores the step-three
+alert text. The \texttt{post\_count} and \texttt{post\_ids} fields track cluster
+membership. The \texttt{sources} array lists all contributing platforms. The
+\texttt{official\_corroboration} boolean indicates whether any NWS, USGS, or
+PulsePoint signal was present in the retrieval context. The \texttt{start\_time},
+\texttt{last\_updated}, and \texttt{status} fields (active, resolved, or stale)
+track cluster lifecycle.
+
+\subsection{Pinecone: post\_embeddings Index}
+
+The Pinecone index stores 384-dimensional float32 vectors generated by
+\texttt{all-MiniLM-L6-v2}. Each vector is associated with a metadata payload
+containing: \texttt{post\_id}, \texttt{timestamp} (Unix epoch), \texttt{lat},
+\texttt{lng}, \texttt{source}, \texttt{crisis\_type}, and
+\texttt{severity\_score}. All metadata fields are indexed for filtering,
+enabling combined ANN plus metadata queries such as ``find the top 50 semantically
+similar posts from the last two hours within a 50km radius.''
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{RAG Pipeline: Detailed Specification}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Retrieval Strategy}
+
+For each pipeline trigger, the retrieval module issues three concurrent queries.
+The Pinecone query uses HNSW ANN search to retrieve the top 50 vectors with
+\texttt{timestamp} greater than current time minus 7200 seconds and
+\texttt{lat}/\texttt{lng} within the trigger bounding box. The MongoDB query
+uses \texttt{\$near} with a configurable radius (default 50km) to retrieve
+posts with low semantic similarity but high geographic proximity. Official
+signals from the \texttt{official\_alerts} Kafka topic that have been persisted
+to a dedicated MongoDB collection are retrieved using a spatial intersection
+query. Results are merged, de-duplicated on \texttt{post\_id}, and ranked by
+a composite score combining semantic similarity, recency, and source authority.
+
+\subsection{LLM Prompt Templates}
+
+The step-one clustering prompt instructs the model: ``Given these N social
+media posts from the past two hours near [location], identify distinct
+real-world events being described. For each event output: event\_type,
+location\_description, estimated\_time, contributing\_post\_ids, and
+confidence\_score as JSON.''
+
+The step-two severity prompt instructs the model: ``Given this cluster of N posts
+describing [event\_type] near [location], rate severity 1--5 where 1 is
+unconfirmed minor incident and 5 is confirmed mass casualty or critical
+infrastructure failure. Consider language urgency, number of independent
+reporters, and any official corroboration. Output: severity\_score (integer)
+and rationale (two sentences) as JSON.''
+
+The step-three alert prompt instructs the model: ``Write a two-to-three sentence
+alert for general public consumption about this severity-[X] [event\_type]
+event near [location]. Be factual, calm, and actionable. Do not include
+usernames. Append: Sources: [platform list].''
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Evaluation Methodology}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Baseline Comparison}
+
+CrisisEcho is evaluated against a keyword-based baseline that applies the
+CrisisLex lexicon to flag posts matching any crisis-related term. The same
+post corpus, label set, and evaluation split are used for both systems,
+enabling a direct comparison of precision, recall, and F1.
+
+\subsection{Evaluation Metrics}
+
+The primary evaluation metrics are as follows. Precision at K measures the
+fraction of the K fired alerts that correspond to a verified real-world event
+in the ground truth, with a target of greater than 0.75. Recall measures the
+fraction of ground-truth events that CrisisEcho detected with at least one
+alert, with a target of greater than 0.70. End-to-end latency measures the
+time from the first social post about an event to the alert appearing on the
+map, with a target of under 90 seconds. The false positive rate measures the
+fraction of fired alerts with no corresponding real event, with a target below
+0.20. Geocoding accuracy measures the fraction of posts geocoded to the correct
+city or neighborhood, with a target above 0.80. The F1 improvement over the
+keyword baseline is expected to exceed 15 percentage points based on comparable
+systems in the literature.
+
+\subsection{Ground Truth Construction}
+
+Ground truth labels are constructed from two sources. Offline evaluation uses
+the HumAID and CrisisNLP test splits with their existing event labels.
+Online evaluation during the project period uses PulsePoint dispatch records
+and NWS active alerts as independent ground truth for Northern Virginia events,
+enabling evaluation of the full live pipeline.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Challenges and Mitigations}
+% ─────────────────────────────────────────────────────────────────────────────
+
+\textbf{Noisy Unstructured Text.} Social media contains typos, sarcasm, memes,
+and off-topic posts at high volume. The DistilBERT pre-filter removes approximately
+70\% of noise before LLM processing, and MinHash LSH deduplication removes
+reposts and retweets.
+
+\textbf{Sparse Geolocation.} The Carmen and spaCy NER cascade with profile location
+fallback addresses most cases. Posts with no extractable location are held for
+batch geo-inference using nearby geotagged posts as geographic priors rather
+than being discarded.
+
+\textbf{LLM API Cost.} The Claude Haiku model is the lowest-cost Anthropic API
+tier. Posts are batched before each API call. Redis caches cluster summaries for
+five minutes. Llama3 via Ollama provides a free offline fallback.
+
+\textbf{Pinecone Free Tier Limits.} The Starter plan provides 100,000 vectors.
+Embeddings older than 72 hours are deleted via a scheduled cleanup worker,
+maintaining headroom within the free tier throughout the project.
+
+\textbf{Real-Time Latency.} Kafka batching, Go concurrency, and Redis caching
+keep end-to-end latency under the 90-second target. The DistilBERT pre-filter
+reduces the volume of posts requiring embedding and LLM processing by approximately
+70\%.
+
+\textbf{False Positives and Notification Fatigue.} The three-condition alert
+threshold (severity 3 or higher, at least three independent contributors from
+at least two platforms, minimum geocoding confidence) substantially reduces
+false positive alerts compared to single-threshold systems.
+
+\textbf{Privacy and Ethics.} All usernames are hashed at ingestion using SHA-256
+before storage. No personally identifiable information appears in LLM prompts
+or alert outputs. Notifications are strictly opt-in. The system is designed for
+situational awareness and safety, not surveillance.
+
+\textbf{Platform Access Restrictions.} Nextdoor and Facebook scraping may be
+blocked. Both are classified as supplementary sources. Bluesky, Mastodon, and
+Reddit provide equivalent open-API coverage as fallback alternatives.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Technology Stack Summary}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Table~\ref{tab:techstack} summarizes the complete technology stack with
+rationale for each selection.
+
+\begin{table}[h]
+\caption{CrisisEcho Technology Stack}
+\label{tab:techstack}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{1.4cm} p{2.2cm} p{4.0cm}}
+\toprule
+\textbf{Component} & \textbf{Technology} & \textbf{Rationale} \\
+\midrule
+Backend API & Go (Fiber) & High-throughput concurrent alert delivery; goroutines for WebSocket management \\
+AI Pipeline & Python 3.11 + LangChain & Rich NLP/LLM ecosystem; LangChain for multi-step agent orchestration \\
+Frontend & React 18 + TypeScript + Leaflet.js & Component-based UI; react-leaflet for interactive geospatial map \\
+Primary DB & MongoDB Atlas (Free M0) & Document store with native 2dsphere geospatial indexing; no PostGIS needed \\
+Vector DB & Pinecone (Free Starter) & Persistent hosted ANN search; payload-filtered vector queries; no inactivity expiry \\
+Cache / Pub-Sub & Redis 7 & Sliding post window; LLM result cache; WebSocket alert relay \\
+Message Queue & Apache Kafka & Decouples ingestion from processing; simulates real-time streaming \\
+NLP & spaCy + Sentence-Transformers + datasketch & Cleaning, NER, embeddings, MinHash LSH deduplication \\
+Geocoding & Carmen + spaCy NER & Cascading text-based location extraction from unstructured posts \\
+LLM Backend & Claude claude-haiku-4-5 / Ollama Llama3 & Haiku for speed/cost; Llama3 as free offline fallback \\
+Containers & Docker + Docker Compose & Single-command local dev; reproducible environment \\
+Deployment & GCP Cloud Run & Serverless, pay-per-use, free tier covers prototype traffic \\
+Visualization & Recharts + Leaflet.js & Timeline charts and interactive geospatial map in React \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{thebibliography}{00}
+
+\bibitem{imran2016twitter}
+M. Imran, P. Mitra, and C. Castillo, ``Twitter as a lifeline: Human-annotated
+Twitter corpora for NLP of crisis-related messages,'' in \textit{Proc. 10th Int.
+Conf. Language Resources and Evaluation (LREC)}, 2016, pp. 1638--1643.
+
+\bibitem{olteanu2014crisislex}
+A. Olteanu, C. Castillo, F. Diaz, and S. Vieweg, ``CrisisLex: A lexicon for
+collecting and filtering microblogged communications in crises,'' in \textit{Proc.
+8th Int. AAAI Conf. Weblogs and Social Media (ICWSM)}, 2014, pp. 376--385.
+
+\bibitem{alam2021humaid}
+F. Alam, F. Sajjad, H. Dalvi, N. Durrani, K. Darwish, and P. Nakov, ``HumAID:
+Human-annotated disaster incidents data from Twitter with deep learning
+benchmarks,'' in \textit{Proc. 15th Int. AAAI Conf. Weblogs and Social Media
+(ICWSM)}, 2021.
+
+\bibitem{middleton2014real}
+S. E. Middleton, L. Middleton, and S. Modafferi, ``Real-time crisis mapping of
+natural disasters using social media,'' \textit{IEEE Intelligent Systems},
+vol. 29, no. 2, pp. 9--17, 2014.
+
+\bibitem{kryvasheyeu2016rapid}
+Y. Kryvasheyeu, H. Chen, N. Obradovich, E. Moro, P. Van Hentenryck,
+J. Fowler, and M. Cebrian, ``Rapid assessment of disaster damage using social
+media activity,'' \textit{Science Advances}, vol. 2, no. 3, p. e1500779, 2016.
+
+\bibitem{lewis2020rag}
+P. Lewis, E. Perez, A. Piktus, F. Petroni, V. Karpukhin, N. Goyal, H. Kuebler,
+M. Lewis, W. Yih, T. Rocktaschel, and S. Riedel, ``Retrieval-augmented generation
+for knowledge-intensive NLP tasks,'' in \textit{Advances in Neural Information
+Processing Systems (NeurIPS)}, vol. 33, 2020, pp. 9459--9474.
+
+\bibitem{yao2023react}
+S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao,
+``ReAct: Synergizing reasoning and acting in language models,'' in \textit{Proc.
+11th Int. Conf. Learning Representations (ICLR)}, 2023.
+
+\bibitem{karpukhin2020dense}
+V. Karpukhin, B. Oguz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, and
+W. Yih, ``Dense passage retrieval for open-domain question answering,'' in
+\textit{Proc. 2020 Conf. Empirical Methods in Natural Language Processing
+(EMNLP)}, 2020, pp. 6769--6781.
+
+\bibitem{nguyen2017robust}
+D. T. Nguyen, K. A. Al Mannai, S. Joty, H. Sajjad, M. Imran, and P. Mitra,
+``Robust classification of crisis-related data on social networks using
+convolutional neural networks,'' in \textit{Proc. 11th Int. AAAI Conf. Weblogs
+and Social Media (ICWSM)}, 2017, pp. 632--635.
+
+\bibitem{dredze2013carmen}
+M. Dredze, M. Paul, S. Bergsma, and H. Tran, ``Carmen: A Twitter geolocation
+system with applications to public health,'' in \textit{AAAI Workshop on
+Expanding the Boundaries of Health Informatics Using AI}, 2013.
+
+\bibitem{mongodb2023geo}
+MongoDB Inc., ``Geospatial Queries,'' MongoDB Documentation, 2023. [Online].
+Available: https://www.mongodb.com/docs/manual/geospatial-queries/
+
+\bibitem{schultz2025}
+G. Schultz, ``Prioritizing safety funding using severity weighted risk scores,''
+\textit{Accident Analysis \& Prevention}, 2025.
+
+\bibitem{hossain2019real}
+M. Hossain, M. Abdel-Aty, M. A. Quddus, Y. Muromachi, and S. N. Sadeek,
+``Real-time crash prediction models: State-of-the-art, design pathways and
+ubiquitous requirements,'' \textit{Accident Analysis \& Prevention}, vol. 124,
+pp. 66--84, 2019.
+
+\end{thebibliography}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\appendix
+% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Task Assignment for Each Member}
+
+\begin{table}[h]
+\caption{Task Assignment Table}
+\label{tab:tasks}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{5.0cm} p{2.5cm}}
+\toprule
+\textbf{Task} & \textbf{Assigned To} \\
+\midrule
+Define objectives, KPIs, and evaluation metrics & C. Williams \\
+Draft system architecture and data flow diagram & C. Williams \\
+Set repository structure, naming conventions, meeting cadence & C. Williams \\
+Write Ethics, Privacy, and Anonymization section & C. Williams \\
+Final report writing and figure integration & C. Williams \\
+Ingest all data sources; standardize timestamps and identifiers & A. Sivakumar \\
+Basic data QC (missing rates, ranges, anomalies) & Shiyi Liu \\
+Data dictionary (columns, dtypes, units, sources) & Shiyi Liu \\
+Implement spaCy NLP pipeline and Carmen geocoding & A. Sivakumar \\
+Implement MinHash LSH deduplication & A. Sivakumar \\
+Implement DistilBERT relevance pre-filter fine-tuning & A. Sivakumar \\
+Define MongoDB schema and 2dsphere indexes & S. Zih \\
+Implement Pinecone vector index and embedding pipeline & S. Zih \\
+Build LangChain three-step LLM agent chain & S. Zih \\
+Create Kafka topics and Go consumer workers & A. Sivakumar \\
+Implement hybrid retrieval (Pinecone ANN + MongoDB \$near) & S. Zih \\
+Integrate official signal injection (NWS, USGS, PulsePoint) & S. Zih \\
+Build Go Fiber REST API and WebSocket server & S. Zih \\
+Build React frontend map, hotspot markers, pin detail drawer & Ki Hong Park \\
+Implement Redis Pub/Sub for real-time alert relay & S. Zih \\
+Implement user notification settings and subscription logic & Ki Hong Park \\
+Implement natural-language query bar (frontend + API) & Ki Hong Park \\
+Run evaluation suite (Precision@K, Recall, latency, geo accuracy) & Shiyi Liu \\
+Sensitivity analysis of severity threshold parameters & Shiyi Liu \\
+Ablations: compare RAG vs. keyword baseline on CrisisNLP split & Shiyi Liu \\
+Dashboard v2 (legends, tooltips, export PNG/CSV) & Ki Hong Park \\
+Docker Compose integration test (all services, single command) & A. Sivakumar \\
+GCP Cloud Run deployment and Firebase frontend hosting & C. Williams \\
+Repository cleanup and README reproduction guide & A. Sivakumar \\
+Demo preparation: crisis scenario replay and live walkthrough & Ki Hong Park \\
+Final proof (numbering, captions, references) & Shiyi Liu \\
+Package submission (PDF + appendices + code link) & Shiyi Liu \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Project Schedule}
+
+\begin{table}[h]
+\caption{Project Schedule (15 Weeks)}
+\label{tab:schedule}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{p{0.8cm} p{6.6cm}}
+\toprule
+\textbf{Week} & \textbf{Task} \\
+\midrule
+1 & Literature Review and Requirements Finalization: Review social media crisis
+detection, RAG, and geospatial database literature; finalize project scope,
+datasets, and technical stack (Go, Python, React, MongoDB, Pinecone, Kafka). \\
+2 & Infrastructure Setup: Provision MongoDB Atlas M0 free cluster, Pinecone
+Starter index, Redis Cloud free tier, and Kafka via Docker Compose; define all
+collection schemas and indexes. \\
+3 & Data Ingestion and Preprocessing: Implement all platform ingestion workers
+(Tweepy, PRAW, AT Protocol, Telethon, NWS, USGS, GDELT, Patch RSS, NewsAPI);
+implement spaCy NLP pipeline, Carmen geocoding, and MinHash deduplication;
+ingest 10,000 labeled posts from HumAID and CrisisNLP as baseline corpus. \\
+4 & Embedding Pipeline and Pre-filter: Implement Sentence-Transformers embedding
+generation; fine-tune DistilBERT relevance classifier on HumAID; write all
+processed posts and embeddings to MongoDB and Pinecone. \\
+5 & RAG Retrieval Module: Implement hybrid retrieval combining Pinecone ANN
+search with MongoDB \$near geospatial queries; integrate official signal
+injection for NWS, USGS, and PulsePoint alerts. \\
+6 & LLM Agent Chain: Build LangChain three-step agent chain (cluster, severity,
+alert); integrate Claude Haiku API; configure Llama3 Ollama fallback; test
+end-to-end on replayed HumAID subset. \\
+7 & Cluster Persistence and Redis Integration: Write LLM agent outputs to MongoDB
+clusters collection; implement Redis caching for cluster summaries;
+implement Pub/Sub publish for new alert events. \\
+8 & Go API Development: Build Fiber REST API with all endpoints (/api/hotspots,
+/api/pin, /api/query, /api/subscribe) and WebSocket /ws/alerts server backed
+by Redis Pub/Sub. \\
+9 & React Frontend Development: Build Leaflet map with hotspot markers, pin
+detail drawer with Recharts timeline, notification settings modal, and
+natural-language query bar with WebSocket alert toasts. \\
+10 & Evaluation Suite: Run offline evaluation on HumAID and CrisisNLP test splits;
+compute Precision@K, Recall, F1, geocoding accuracy, and end-to-end latency;
+compare RAG pipeline against CrisisLex keyword baseline. \\
+11 & Stretch Features: Implement positive event detection with green markers;
+begin multi-language support using multilingual-e5 embeddings for
+Spanish-language posts in the Northern Virginia area. \\
+12 & System Testing and Optimization: Full Docker Compose integration test; address
+latency bottlenecks; tune severity thresholds; harden edge cases in
+geocoding pipeline and data ingestion workers. \\
+13 & Refinement and Documentation: Adjust LLM prompt templates based on evaluation
+results; prepare technical documentation, API reference, and data dictionary. \\
+14 & Demo Preparation: Prepare demo script simulating a flooding crisis from
+replayed HumAID data; verify full pipeline fires an alert within 90 seconds;
+prepare presentation slides and architecture diagram. \\
+15 & Finalization: Final report writing; repository cleanup with reproduction README;
+package submission (PDF, appendices, code link, data dictionary). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Acknowledgment}
+
+This proposal used AI assistance for content generation and will use AI
+assistance in writing code throughout the project. All architectural decisions,
+specification choices, and evaluation designs were formulated by the project
+team.
+
+\end{document}
