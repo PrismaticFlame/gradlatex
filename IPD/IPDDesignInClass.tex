@@ -1,0 +1,73 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+% \usepackage{enumitem}
+% \usepackage{parskip}
+
+\setclass{\IPD}
+\settitle{Evaluating Design In-Class Assignment}
+\setauthors{Tzu-Chen Chiu, Christopher Williams}
+\setheaderauthors{Chiu, Williams}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{aside}{Format}
+    The conclusion is on page 1 and 2, and the comparison of architectures is partially on page 1 and page 2.
+\end{aside}
+
+\section{Evaluation Criteria}
+
+\begin{itemize}
+    \item \textbf{LLM RAG Usage for generated course assignments}: Using a RAG LLM model would be beneficial 
+    for this feature as it would utilize the generative capability of LLM's, but restrict and finetune
+    the model's database to only what is necessary - uploaded course material and specific .edu sites 
+    (yes, we used an emdash of our own volition). This would also then summarily lead to us 
+    using the RAG model for grading the assignments because the LLM would be pulling from the same 
+    material it used to create the assignment, to grade the assignment.
+    \item \textbf{Using a frontend that displays assignments}: Using a dedicated front end 
+    to display the generated assignments, as well as the assignments turned in by the students to display
+    the autograding of their assignments would be beneficial for ease of use and access for instructors.
+    \item \textbf{Dedicated services for grading and delivery}: Having dedicated, seperate services 
+    for grading assignments and ``delivering'' assignments to the students would be beneficial as 
+    these services would not directly rely on another service working before hand. And, the separation 
+    of these services makes maintainability much more feasible.
+\end{itemize}
+
+\section{Evaluate 6 Architectures}
+
+\begin{table}[h!]
+\centering
+\caption{Architecture Model Comparison Against Design Criteria}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabularx}{\textwidth}{|>{\bfseries}p{2.5cm}|X|X|X|c|}
+\hline
+\textbf{Architecture} & \textbf{LLM RAG for Assignment Generation} & \textbf{Frontend for Assignment Display} & \textbf{Dedicated Grading \& Delivery Services} & \textbf{Total Score}\\
+\hline
+Monolithic       & \textbf{Low} --- RAG pipeline tightly coupled; hard to scale LLM calls independently & \textbf{Medium} --- Frontend achievable but scaling UI alongside backend is inflexible & \textbf{Low} --- Grading and delivery share resources with all other logic; no clean separation & 4\\
+\hline
+Micro-services    & \textbf{High} --- RAG service isolates LLM logic; scales independently from other services & \textbf{High} --- Dedicated frontend service cleanly separated from backend services & \textbf{High} --- Grading and delivery naturally map to discrete, independently deployable services & 9\\
+\hline
+Event-Driven     & \textbf{High} --- Async events suit long-running RAG/LLM jobs well & \textbf{Medium} --- Frontend possible but event-driven adds complexity to real-time UI updates & \textbf{High} --- Grading and delivery triggered by events; fully decoupled by design & 8\\
+\hline
+Serverless       & \textbf{Low} --- LLM/RAG calls exceed typical function time limits; cold starts hurt UX & \textbf{Medium} --- UI can be served statically & \textbf{Medium} --- Separation is natural but execution time limits hinder grading workloads &5\\
+\hline
+Edge Computing   & \textbf{Low} --- RAG requires centralized model/vector DB & \textbf{Low} --- Latency optimization irrelevant for this use case & \textbf{Low} --- No benefit to pushing grading or delivery logic to edge nodes &3\\
+\hline
+P2P              & \textbf{Low} --- RAG needs a consistent, centralized knowledge base; P2P undermines this & \textbf{Low} --- No central server means inconsistent UI/content delivery & \textbf{Low} --- No authoritative node for grading; consistency and integrity cannot be guaranteed & 3\\
+\hline
+\end{tabularx}
+\end{table}
+
+\noindent\textit{Note:} For the purpose of comparison, qualitative ratings were mapped to numeric
+values to compute an overall score. Each criterion was scored as \textbf{High = 3}, \textbf{Medium = 2},
+and \textbf{Low = 1}, and the total score for each architecture is the sum across all three criteria.
+This scoring provides a concise summary of how well each architecture aligns with the system
+requirements.
+
+\section{Best Architecture Choice}
+
+The best architecture design choice for this system is \textbf{Microservices}, as it cleanly separates the major functions of this diverse product and enables independent scalability and maintainability, resulting in long-lasting and easy-to-understand services. This architecture aligns well with the system’s requirements for LLM-based RAG assignment generation, instructor review, and automated grading and delivery. By isolating LLM-intensive workloads from the user interface and delivery logic, microservices allow each component to scale and evolve independently without impacting overall system stability.
+The primary weakness of a microservices architecture is its increased operational complexity, including service coordination, deployment, and monitoring overhead, which may be challenging for a small three-person development team. If the system were intended only as a lightweight prototype or expected to support a small user base with limited concurrency, a monolithic or serverless architecture could be a better fit due to lower setup costs. Alternatively, if future requirements emphasized large-scale asynchronous processing, such as batch grading across many courses, an event-driven architecture might be more appropriate.
+To mitigate these risks, the system can adopt coarse-grained microservices initially and incrementally refine service boundaries as requirements grow. Selective use of event-based communication for long-running tasks can further improve resilience while avoiding unnecessary architectural complexity.
+\end{document}
