@@ -1,0 +1,87 @@
+\documentclass[12pt]{article}
+\usepackage{cwilliams-standard}
+
+\setclass{\NLP}
+\settitle{Homework 1}
+
+\begin{document}
+
+\maketitlepage
+
+In this report, I will go over my steps in tackling the first homework on NLP. These tasks included: 
+Text-Embedding and Topic Modeling. It was also unstated (but clearly) necessary that we needed to do 
+preprocessing on the corpora given.
+
+For the first (zeroth, $0^{th}$) task, I did preprocessing. For each subsequent task, I attempted to do what I 
+believed was appropriate preprocessing for said task (as we talked at length in class about how 
+preprocessing was approached differently depending on what the problem you are dealing with is). I will 
+do my best to explain each of the methods of preprocessing I had considered, and which ones I decided on 
+using for each task and why.
+
+\begin{aside}{Methodology}
+For the two main tasks, I will explain my methodology as we go. 
+\end{aside}
+
+\begin{important}{Dataset}
+    For the \textit{entire} report/assignment, I did not split the dataset up into its constituent parts 
+    (train, validation, test) but, instead, \textbf{combined} them (as the assignment said to do, Pg. 1). Then, after combination 
+    they are used in 5-fold cross validation. Stated for clarity.
+\end{important}
+
+
+\section*{Preprocessing}
+
+Firstly, for preprocessing I laid out these options of preprocessing the data to give myself as many options 
+of cleaning the data as possible.
+
+\begin{table}[H]
+    \centering
+    \definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+    \definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{>{\bfseries\centering\arraybackslash}p{0.6cm}
+                    p{5.2cm}
+                    p{7.8cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\# & \color{white}\textbf{Step} & \color{white}\textbf{Description} \\
+        \midrule
+        \rowcolor{rowalt} 0 & Expand Contractions      & \texttt{"can't"} $\to$ \texttt{"cannot"} \\
+                          1 & Lowercase                & Normalize all text to lowercase \\
+        \rowcolor{rowalt} 2 & Remove URLs \& Mentions  & Strip \texttt{http://...} and \texttt{@username} tokens \\
+                          3 & Strip Hashtag Symbol     & \texttt{\#word} $\to$ \texttt{word} (keep the term) \\
+        \rowcolor{rowalt} 4 & Remove Emoji             & Drop all emoji characters \\
+                          5 & Remove Punctuation       & Strip non-alphanumeric characters \\
+        \rowcolor{rowalt} 6 & Remove Digit-only Tokens & Drop tokens consisting entirely of digits \\
+                          7 & Remove Stop Words        & Filter standard English stop words \\
+        \rowcolor{rowalt} 8 & POS-aware Lemmatization  & WordNet lemmatization guided by POS tags \\
+        \bottomrule
+    \end{tabular}
+    \caption{Preprocessing Options}
+    \label{tab:preprocessing}
+\end{table}
+
+These options were taken from class with one exception: \# 8, POS-aware Lemmatization. 
+This was suggested by Claude Code (within VSCode) to tag parts of speech in the preprocesing stage. 
+This specific lemmatization is aware of parts of speech (i.e., understands that "running" 
+is a verb and will convert that to its root, "run") but does not pass along any additional 
+information about the word to the frequency-based embedder.
+
+Each preprocessing option that was used in each task will be stated.
+
+\section*{Text-Embedding}
+
+\section{Frequency-based Embeddings}
+
+I used \textit{both} Bag of Words and TF-IDF to compare the two methods and see which resulted 
+in better performance.
+
+\section{Word-based Embeddings}
+
+\section{Sentence Embeddings}
+
+\section*{Topic Modeling}
+
+\section*{Findings}
+
+\end{document}

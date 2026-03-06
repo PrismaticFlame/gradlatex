@@ -1,0 +1,106 @@
+====================================================
+  Top-100 chi-square features  |  Bag of Words
+====================================================
+  Rank     Chi2 Score  Feature
+  ------ ------------  ----------------------------
+  1             76.88  irony
+  2             55.80  sarcasm
+  3             49.58  love
+  4             49.13  great
+  5             41.08  fun
+  6             30.81  work
+  7             30.57  yay
+  8             25.85  wake
+  9             23.15  hour
+  10            21.78  oh
+  11            19.71  check
+  12            17.69  day
+  13            17.35  follow
+  14            15.67  morning
+  15            15.12  love wake
+  16            13.17  thanks
+  17            13.04  test
+  18            13.02  nice
+  19            12.96  notcies
+  20            12.96  start day
+  21            12.31  teacher
+  22            12.04  notcies eu
+  23            11.50  people
+  24            11.33  monday
+  25            11.21  understand
+  26            11.13  glad
+  27            11.10  wait
+  28            10.98  wonderful
+  29            10.80  joy
+  30            10.80  love work
+  31            10.71  final
+  32            10.21  class
+  33            10.19  great day
+  34            10.19  ugly
+  35            10.13  awesome
+  36             9.96  school
+  37             9.78  sleep
+  38             9.72  driver
+  39             9.47  photo
+  40             9.26  com
+  41             9.13  exam
+  42             9.13  good thing
+  43             8.95  way start
+  44             8.64  great way
+  45             8.64  gamergate
+  46             8.33  teenanalcasting
+  47             8.16  lovely
+  48             8.10  rt
+  49             8.08  customer
+  50             8.03  feel
+  51             7.93  eu
+  52             7.88  birthday
+  53             7.56  love people
+  54             7.41  tonight
+  55             7.41  www
+  56             7.41  www monstermmorpg
+  57             7.41  monstermmorpg
+  58             7.41  monstermmorpg com
+  59             7.41  brown
+  60             7.40  wow
+  61             7.33  today
+  62             7.25  super
+  63             7.25  expect
+  64             7.04  great start
+  65             7.04  shock
+  66             6.95  hour sleep
+  67             6.95  bus
+  68             6.51  sick
+  69             6.51  job
+  70             6.48  tsu
+  71             6.48  xd
+  72             6.48  sweater
+  73             6.48  pray
+  74             6.48  invoice
+  75             6.48  nature
+  76             6.48  perfectly
+  77             6.48  fantastic
+  78             6.48  complain
+  79             6.48  quiet
+  80             6.48  government
+  81             6.48  lecture
+  82             6.48  oh love
+  83             6.40  bit
+  84             6.40  seriously
+  85             6.16  post
+  86             6.12  totally
+  87             6.01  act like
+  88             6.01  blow
+  89             6.01  mother
+  90             6.01  fake
+  91             6.00  new
+  92             5.98  throw
+  93             5.98  decide
+  94             5.81  size
+  95             5.81  excite
+  96             5.81  new year
+  97             5.73  study
+  98             5.57  start
+  99             5.56  website
+  100            5.56  xxx
+====================================================

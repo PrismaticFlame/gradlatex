@@ -1,0 +1,31 @@
+==================================================================
+  CS 5624 NLP - Assignment 1  |  Topic Modeling (BERTopic)
+==================================================================
+  Note: BERTopic uses BERT embeddings + UMAP + HDBSCAN +
+  c-TF-IDF. It does not have alpha/beta hyperparameters
+  (those belong to LDA). Topic count is controlled via
+  'nr_topics', swept here from 2 to 10.
+
+   nr_topics  Actual Topics  C_V Coherence
+  ----------  -------------  -------------
+           2              1            N/A
+           3              2         0.4243
+           4              3         0.3833
+           5              4         0.3951
+           6              5         0.4722
+           7              6         0.4045
+           8              7         0.4311
+           9              8         0.3672
+          10              9         0.3690
+
+  Optimal nr_topics : 6
+  Actual topics     : 5
+  Best C_V coherence: 0.4722
+
+  Top words per topic (optimal model):
+    Topic 1: love, just, christmas, day, im, like, today, irony, people, sarcasm
+    Topic 2: game, team, rt, win, good, league, players, play, year, football
+    Topic 3: police, obama, people, white, race, ferguson, irony, racist, cops, cuba
+    Topic 4: music, song, watch, album, good, love, episode, like, nowplaying, lyrics
+    Topic 5: eu, notcies eu, notcies, juncker, notcias, europ, eu europ, notcias eu, santa juncker, fish discards
+==================================================================

@@ -1,0 +1,18 @@
+==============================================================
+  CS 5624 NLP – Assignment 1  |  Frequency-Based Embeddings
+==============================================================
+  Embedding        : Bag of Words
+  Feature selection: Chi-square, top 100 features
+  Cross-validation : 5-fold stratified
+
+  Classifier           Accuracy        F-1  Macro F-1
+  ------------------ ---------- ---------- ----------
+  Random Forest      0.6364±0.014  0.5457±0.016  0.6212±0.014
+  SVM                0.6381±0.012  0.5619±0.015  0.6266±0.011
+  Decision Tree      0.6359±0.013  0.5456±0.015  0.6208±0.012
+
+  Best results per metric:
+    Accuracy    : SVM  (0.6381)
+    F-1         : SVM  (0.5619)
+    Macro F-1   : SVM  (0.6266)
+==============================================================
