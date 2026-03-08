@@ -1,0 +1,106 @@
+====================================================
+  Top-100 chi-square features  |  TF-IDF
+====================================================
+  Rank     Chi2 Score  Feature
+  ------ ------------  ----------------------------
+  1             20.45  irony
+  2             17.53  great
+  3             16.97  love
+  4             16.80  fun
+  5             15.07  sarcasm
+  6             13.11  yay
+  7              8.96  hour
+  8              8.71  wake
+  9              8.53  work
+  10             8.05  check
+  11             6.31  love wake
+  12             6.24  follow
+  13             6.23  understand
+  14             6.07  test
+  15             6.03  thanks
+  16             5.91  glad
+  17             5.71  great day
+  18             5.55  oh
+  19             5.55  start day
+  20             5.53  joy
+  21             5.38  nice
+  22             5.36  monday
+  23             5.28  love work
+  24             5.05  wonderful
+  25             4.84  day
+  26             4.66  teenanalcasting
+  27             4.58  morning
+  28             4.49  notcies
+  29             4.36  sick
+  30             4.21  good thing
+  31             4.19  tonight
+  32             4.16  teacher
+  33             4.14  final
+  34             4.12  gamergate
+  35             4.10  customer
+  36             4.05  awesome
+  37             3.92  shock
+  38             3.90  exam
+  39             3.84  lovely
+  40             3.77  ugly
+  41             3.66  surprise
+  42             3.65  wait
+  43             3.64  rt
+  44             3.63  fantastic
+  45             3.61  response
+  46             3.61  driver
+  47             3.60  notcies eu
+  48             3.55  hour sleep
+  49             3.53  monstermmorpg
+  50             3.51  way start
+  51             3.50  oh love
+  52             3.49  lecture
+  53             3.47  helpful
+  54             3.46  great start
+  55             3.45  wow
+  56             3.43  amen
+  57             3.30  great way
+  58             3.28  com
+  59             3.28  throw
+  60             3.28  love people
+  61             3.23  class
+  62             3.22  brown
+  63             3.19  xd
+  64             3.18  fake
+  65             3.16  photo
+  66             3.04  soooo
+  67             3.03  expect
+  68             3.00  school
+  69             2.87  pray
+  70             2.86  xxx
+  71             2.81  change
+  72             2.80  win
+  73             2.75  perfectly
+  74             2.73  idea
+  75             2.72  sweater
+  76             2.72  fit
+  77             2.66  shocker
+  78             2.61  wonder
+  79             2.61  today
+  80             2.61  gee
+  81             2.60  birthday
+  82             2.60  monstermmorpg com
+  83             2.60  www monstermmorpg
+  84             2.60  www
+  85             2.59  superman
+  86             2.59  government
+  87             2.59  people
+  88             2.58  window
+  89             2.57  excite
+  90             2.56  mother
+  91             2.55  decide
+  92             2.55  totally
+  93             2.52  apple
+  94             2.49  love family
+  95             2.48  ad
+  96             2.47  enter
+  97             2.45  super
+  98             2.44  supportive
+  99             2.43  come home
+  100            2.43  interview
+====================================================

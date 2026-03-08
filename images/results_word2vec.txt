@@ -1,0 +1,26 @@
+==================================================================
+  CS 5624 NLP - Assignment 1  |  Word-Based Embeddings (Word2Vec)
+==================================================================
+  Source  : English Wikipedia enwiki_upos_skipgram_300_2_2021
+  Reduced : PCA -> 50d  |  t-SNE -> 2d
+  CV      : 5-fold stratified
+
+  -- PCA --
+  Classifier               Accuracy            F-1      Macro F-1
+  ------------------ -------------- -------------- --------------
+  Random Forest      0.6036+/-0.012  0.5323+/-0.017  0.5941+/-0.012
+  SVM                0.6027+/-0.016  0.5656+/-0.019  0.5996+/-0.016
+  Decision Tree      0.5392+/-0.010  0.5228+/-0.014  0.5386+/-0.010
+
+  -- t-SNE --
+  Classifier               Accuracy            F-1      Macro F-1
+  ------------------ -------------- -------------- --------------
+  Random Forest      0.5588+/-0.021  0.5318+/-0.022  0.5573+/-0.021
+  SVM                0.5384+/-0.015  0.4853+/-0.023  0.5326+/-0.013
+  Decision Tree      0.5568+/-0.020  0.5450+/-0.025  0.5564+/-0.020
+
+  Best results per metric (across all reductions & classifiers):
+    Accuracy    : PCA + Random Forest  (0.6036)
+    F-1         : PCA + SVM  (0.5656)
+    Macro F-1   : PCA + SVM  (0.5996)
+==================================================================

@@ -1,0 +1,480 @@
+\documentclass[12pt]{article}
+\usepackage{cwilliams-standard}
+
+\setclass{\NLP}
+\settitle{Homework 1}
+
+\definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+\definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+
+\begin{document}
+
+\maketitlepage
+
+In this report, I will go over my steps in tackling the first homework on NLP. These tasks included: 
+Text-Embedding and Topic Modeling. It was also unstated (but clearly) necessary that we needed to do 
+preprocessing on the corpora given.
+
+For the first (zeroth, $0^{th}$) task, I did preprocessing. For each subsequent task, I attempted to do what I 
+believed was appropriate preprocessing for said task (as we talked at length in class about how 
+preprocessing was approached differently depending on what the problem you are dealing with is). I will 
+do my best to explain each of the methods of preprocessing I had considered, and which ones I decided on 
+using for each task and why.
+
+\begin{aside}{Methodology}
+For the two main tasks, I will explain my methodology as we go. 
+\end{aside}
+
+\begin{important}{Dataset}
+    For the \textit{entire} report/assignment, I did not split the dataset up into its constituent parts 
+    (train, validation, test) but, instead, \textbf{combined} them (as the assignment said to do, Pg. 1). Then, after combination 
+    they are used in 5-fold cross validation. Stated for clarity.
+\end{important}
+
+\begin{aside}{Code}
+    The code will be submitted on Canvas with this report PDF. If, for some reason, the code does not 
+    behave or load properly, the file is uploaded to Google Drive and there will be a link to the code 
+    in the Code section of the report.
+\end{aside}
+
+
+\newpage
+\section*{Preprocessing}
+
+Firstly, for preprocessing I laid out these options of preprocessing the data to give myself as many options 
+of cleaning the data as possible.
+
+\begin{table}[H]
+    \centering
+    \definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+    \definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{>{\bfseries\centering\arraybackslash}p{0.6cm}
+                    p{5.2cm}
+                    p{7.8cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\# & \color{white}\textbf{Method} & \color{white}\textbf{Description} \\
+        \midrule
+        \rowcolor{rowalt} 1 & Expand Contractions      & \texttt{"can't"} $\to$ \texttt{"cannot"} \\
+                          2 & Lowercase                & Normalize all text to lowercase \\
+        \rowcolor{rowalt} 3 & Remove URLs \& Mentions  & Strip \texttt{http://...} and \texttt{@username} tokens \\
+                          4 & Strip Hashtag Symbol     & \texttt{\#word} $\to$ \texttt{word} (keep the term) \\
+        \rowcolor{rowalt} 5 & Remove Emoji             & Drop all emoji characters \\
+                          6 & Remove Punctuation       & Strip non-alphanumeric characters \\
+        \rowcolor{rowalt} 7 & Remove Digit-only Tokens & Drop tokens consisting entirely of digits \\
+                          8 & Remove Stop Words        & Filter standard English stop words \\
+        \rowcolor{rowalt} 9 & POS-aware Lemmatization  & WordNet lemmatization guided by POS tags \\
+        \bottomrule
+    \end{tabular}
+    \caption{Preprocessing Options}
+    \label{tab:preprocessing}
+\end{table}
+
+These options were taken from class with one exception: \# 9, POS-aware Lemmatization. 
+This was suggested by Claude Code (within VSCode) to tag parts of speech in the preprocesing stage. 
+This specific lemmatization is aware of parts of speech (i.e., understands that "running" 
+is a verb and will convert that to its root, "run") but does not pass along any additional 
+information about the word to the frequency-based embedder.
+
+Each preprocessing option that was used in each task will be stated.
+
+\phantomsection\section*{Text-Embedding}
+
+For each subtask under this section, each model (Random Forest, SVM, Decision Tree) was tested
+on each embedding schema. Here are the hyperparameters I used for each model.
+
+\begin{table}[H]
+    \centering
+    \definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+    \definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{p{5.0cm} p{8.0cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{Hyperparameter} & \color{white}\textbf{Value} \\
+        \midrule
+        \multicolumn{2}{l}{\cellcolor{rowalt!60}\textbf{Random Forest}} \\
+        \rowcolor{rowalt} \texttt{n\_estimators}  & 200 \\
+                          \texttt{random\_state}  & 42 \\
+        \rowcolor{rowalt} \texttt{class\_weight}  & \texttt{"balanced"} \\
+                          \texttt{n\_jobs}        & $-1$ (use all cores) \\
+        \midrule
+        \multicolumn{2}{l}{\cellcolor{rowalt!60}\textbf{SVM}} \\
+        \rowcolor{rowalt} \texttt{kernel}         & \texttt{"rbf"} \\
+                          \texttt{C}              & 1.0 \\
+        \rowcolor{rowalt} \texttt{gamma}          & \texttt{"scale"} \\
+                          \texttt{random\_state}  & 42 \\
+        \rowcolor{rowalt} \texttt{class\_weight}  & \texttt{"balanced"} \\
+        \midrule
+        \multicolumn{2}{l}{\cellcolor{rowalt!60}\textbf{Decision Tree}} \\
+        \rowcolor{rowalt} \texttt{criterion}      & \texttt{"gini"} \\
+                          \texttt{random\_state}  & 42 \\
+        \rowcolor{rowalt} \texttt{class\_weight}  & \texttt{"balanced"} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Classifier hyperparameters used across all embedding tasks.}
+    \label{tab:hyperparameters}
+\end{table}
+
+ As stated in \textit{Hitchhikers Guide to the Galaxy} by Douglas Adams, 42 is the answer to everything.
+
+\section{Frequency-based Embeddings} \label{freq_embed}
+
+For this portion of the assignment, I was curious which frequency embedder would perform better. So, 
+I used \textit{both} Bag of Words and TF-IDF to compare the two methods and see which resulted in 
+better performance. Both embedders received the works of preprocessing (all available methods described above) 
+before being fed the data.
+
+Bag of Words represents each document in the corpora as a vector of word counts across the vocabulary. 
+Words that appear more often in a document get higher values, but all words are treated equally regardless 
+of how common they are across the entire corpus. This does allow uninformative filler words to have a higher 
+weight (not stop words, as those were already removed in preprocessing). So, an update to that method is 
+TF-IDF. This method weighs each word by how ``distinctive'' it is. Within document frequency is weighted 
+heavy, but if a specific word appears often across the entire corpus, then it is reduced in importance. 
+This method is looking for informative words within specific documents rather than the entire corpus.
+
+I believed that by comparing the two methods I could see how much more effective TF-IDF was than Bag 
+of Words for frequency embedding, potentially seeing a decent boost to model performance. However, the 
+boost was not nearly as significant as I thought. 
+
+Bag of Words only underperformed by a percentage at most, and actually beat TF-IDF in F1 score (by 0.0009)
+in SVM. It also appears that Bag of Words beats TF-IDF in all models, within F1. 
+This tiny difference surprised me and made me check my approach to make sure there wasn't a mistake, but 
+it appears that frequency embedding is not as superior as I anticipated it to be.
+
+A potential explanation of this performance is that stop word removal during preprocessing already eliminated 
+a decent amount of globally common words that TF-IDF is designed to take into consideration, which may 
+have reduced TF-IDF's advantage that I believed it would have.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/results_bow.png}
+        \caption{Bag of Words}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/results_tfidf.png}
+        \caption{TF-IDF}
+    \end{subfigure}
+    \caption{Frequency-based embedding results.}
+    \label{fig:freq-embeddings}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+    \definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{Classifier}
+            & \color{white}\textbf{Acc.}
+            & \color{white}\textbf{Acc. $\sigma$}
+            & \color{white}\textbf{F1}
+            & \color{white}\textbf{F1 $\sigma$}
+            & \color{white}\textbf{Macro F1}
+            & \color{white}\textbf{MF1 $\sigma$} \\
+        \midrule
+        \multicolumn{7}{l}{\cellcolor{rowalt!60}\textbf{Bag of Words}} \\
+        \rowcolor{rowalt} Random Forest  & 0.6364 & 0.0143 & 0.5457 & 0.0163 & 0.6212 & 0.0139 \\
+                          SVM            & \cellcolor{green!13}\textbf{0.6381} & 0.0118 & \cellcolor{green!13}\textbf{0.5619} & 0.0151 & \cellcolor{green!13}\textbf{0.6266} & 0.0109 \\
+        \rowcolor{rowalt} Decision Tree  & 0.6359 & 0.0128 & 0.5456 & 0.0150 & 0.6208 & 0.0123 \\
+        \midrule
+        \multicolumn{7}{l}{\cellcolor{rowalt!60}\textbf{TF-IDF}} \\
+        \rowcolor{rowalt} Random Forest  & 0.6270 & 0.0109 & 0.5052 & 0.0249 & 0.6029 & 0.0147 \\
+                          SVM            & \cellcolor{green!13}\textbf{0.6438} & 0.0070 & \cellcolor{green!13}\textbf{0.5610} & 0.0106 & \cellcolor{green!13}\textbf{0.6305} & 0.0062 \\
+        \rowcolor{rowalt} Decision Tree  & 0.6194 & 0.0080 & 0.4905 & 0.0233 & 0.5933 & 0.0122 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Frequency-based embedding results (5-fold CV). Acc.\ = Accuracy, MF1 = Macro F1, $\sigma$ = std.\ dev.}
+    \label{tab:freq-results}
+\end{table}
+
+Shown in this table, SVM wins. SVM is meant for higher dimensional tasks, and text 
+embedding in general falls into that category as there is not any one, clean decision boundary that 
+"classifies" words. Also, the curse of dimensionality punishes tree-based methods like the Decision Tree 
+and more primarily Random Forest \cite{SVMTextCat-Joachims}.
+BOW and TF-IDF both produce high dimensionality, sparse vectors and SVMS are designed for higher dimension 
+problems, finding a maximum-margin hyperplane with support vectors. \cite{redshift_svm_highdim} 
+\cite{RFHighDim-Genuer}
+However, ultimately, all the models performed very similarly meaning in general they were all gleaming 
+the same amount of information from the preprocessed data. So, we should try another embedding technique!
+
+\section{Word-based Embeddings} \label{word_embed}
+
+For task 2, Word-based embeddings, I used 5 of the 8 available preprocessing methods: (2) Lowercase, 
+(3) Remove URLs \& Mentions, (4) Strip Hashtag Symbol, (8) Remove Stop Words, and (9) POS-aware 
+Lemmatization. The reasoning for this is that I used Word2Vec embedding, specifically the 
+\textbf{English Wikipedia} (enwiki\_upos\_skipgram\_300\_2\_2021) \cite{fares-etal-2017-word}. 
+They state on the website \cite{WebVectors-Fares2017} that the preprocesing used is as follows: 
+
+\begin{center}
+    \textit{split into sentences, tokenized, lemmatized, PoS-tagged, multi-word named entities extracted, 
+    stop words removed}
+\end{center}
+
+To best fit to what the model was already trained on, I did the preprocessing that would get me closest 
+to what the model already knew. I chose this particularly Word2Vec embedding due to how clear the preprocessing 
+was and that it was the newest. I had emailed Dr. Garg about taking into consideration the 
+SimLex999 and Google Analogy scores, but he had said to not take it into consideration for this 
+assignment.
+
+I chose Word2Vec over GloVe because I understood it better than GloVe (and it was also easier to implement).
+
+Word2Vec obtains ``meanings'' of words based on vector representations of each word in relation to 
+every other word. As the ``meaning'' of one word changes, every other meaning shifts as well. This representation 
+of high dimensional vectors that contain meaning made the most sense to me and, given the high dimensionality 
+of the vectors, believed that SVM would perform well once again. 
+
+GloVe does the same process, but takes into account the position of the words within each document. Word2Vec 
+does not consider the positioning of the words, so it simply loses out on that information. This would, in 
+theory make GloVe the better word-based embedding approach.
+
+After applying the preprocessing, I trained the 3 separate models on PCA and t-SNE (t-distributed 
+stochastic neighbor embedding) dimensionality reduction and compared the 6 models. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/results_word2vec.png}
+    \caption{Word-based embedding results.}
+    \label{fig:word2vec}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{Classifier}
+            & \color{white}\textbf{Acc.}
+            & \color{white}\textbf{Acc. $\sigma$}
+            & \color{white}\textbf{F1}
+            & \color{white}\textbf{F1 $\sigma$}
+            & \color{white}\textbf{Macro F1}
+            & \color{white}\textbf{MF1 $\sigma$} \\
+        \midrule
+        \multicolumn{7}{l}{\cellcolor{rowalt!60}\textbf{PCA}} \\
+        \rowcolor{rowalt} Random Forest  & \cellcolor{green!13}\textbf{0.6036} & 0.0117 & 0.5323 & 0.0171 & 0.5941 & 0.0123 \\
+                          SVM            & 0.6027 & 0.0156 & \cellcolor{green!13}\textbf{0.5656} & 0.0192 & \cellcolor{green!13}\textbf{0.5996} & 0.0157 \\
+        \rowcolor{rowalt} Decision Tree  & 0.5392 & 0.0100 & 0.5228 & 0.0138 & 0.5386 & 0.0101 \\
+        \midrule
+        \multicolumn{7}{l}{\cellcolor{rowalt!60}\textbf{t-SNE}} \\
+        \rowcolor{rowalt} Random Forest  & \cellcolor{green!13}\textbf{0.5588} & 0.0211 & 0.5318 & 0.0224 & \cellcolor{green!13}\textbf{0.5573} & 0.0211 \\
+                          SVM            & 0.5384 & 0.0150 & 0.4853 & 0.0235 & 0.5326 & 0.0133 \\
+        \rowcolor{rowalt} Decision Tree  & 0.5568 & 0.0197 & \cellcolor{green!13}\textbf{0.5450} & 0.0255 & 0.5564 & 0.0200 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Word2Vec embedding results by dimensionality reduction (5-fold CV). Acc.\ = Accuracy, MF1 = Macro F1, $\sigma$ = std.\ dev.}
+    \label{tab:word2vec-results}
+\end{table}
+
+When PCA dimensionality reduction was done, it seems SVM performed better than the other models in F1 and Macro-F1, 
+and just barely loosing out to Random Forest in Accuracy. I believe the dimensionality reduction allowed the 
+tree based methods to perform better as there was less information to deal with and they could split on 
+certain features with greater information gain, which is likely why they won in with t-SNE over SVM. 
+
+Overall, PCA has higher values and wins because the dimensionality reduction is not as severe as t-SNE's. 
+PCA preserves a sort of global ``structure'' which helps with classification, but t-SNE is more for 
+visualization and twists the distances of ``meanings'' at the global/vocabulary level.
+
+And, a final note, that these word-based embeddings \textbf{all} perform worse that frequency based embeddings. 
+This could be for a few reasons, given that this method should do better than task 1. 
+
+\begin{itemize}
+    \item \textbf{Tweets (or Xeets if you must)}: Given that tweets are generally shorter and don't contain as much context as 
+    other documents do, and that Word2Vec was potentially trained on more cohesive and well structured documents,
+    this could have an effect.
+    \item \textbf{Irony}: The entire dataset is designed around detecting irony, which has subverted 
+    expectations in the texts, causing the ``nonsequitors'' of irony to trip up the models
+    \item \textbf{Preprocessing}: This is most unlikely, but there's a chance that either I did 
+    not do enough or did too much preprocessing on the data, removing or keeping information 
+    that ultimately hurt the models after the embeddings were done.
+\end{itemize}
+
+\section{Sentence Embeddings} \label{sentence_embed}
+
+For the sentence embeddings, I used the pre-trained Sentence-BERT (SBERT) model. I used Sentence-BERT because we 
+had talked about BERT in class, and I was more familiar with the idea overall beyond the 
+Universal Sentence Encoder (USE) model.
+
+For preprocessing, I used only 2 of the options I had listed earlier. SBERT was trained on 
+natural prose and it relies on word order, punctuation, and un-lemmatized words to gain more information.
+So, the 2 preprocessing steps that I used were (3) Remove URLs \& Mentions and (4) Strip Hashtag Symbol. This 
+was minimal and done only to affect the nature and structure tweets (Xeets, if you must).
+
+As we did not talk about BERT or SBERT in class yet, but it uses concepts that we talked about in 
+class (like the window of looking at 2 words to the left and right of the target word), I will do 
+my best to give a brief overview of SBERT.
+
+\begin{center}
+    BERT reads text in both directions, not just left to right. This lets BERT capture a lot more 
+    context that earlier models \cite{devlin-etal-2019-bert}. But, BERT was sadly not designed to do sentence level embeddings. 
+    So, in 2019 SBERT was released to use siamese and triplet network structures on sentence \textit{pairs} 
+    \cite{reimers-gurevych-2019-sentence}. This allows two semantically similar sentences 
+    to be represented close to each other (geometrically speaking).
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/results_sbert.png}
+    \caption{Sentence-BERT embedding results.}
+    \label{fig:sbert}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}
+                    >{\centering\arraybackslash}p{1.8cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{Classifier}
+            & \color{white}\textbf{Acc.}
+            & \color{white}\textbf{Acc. $\sigma$}
+            & \color{white}\textbf{F1}
+            & \color{white}\textbf{F1 $\sigma$}
+            & \color{white}\textbf{Macro F1}
+            & \color{white}\textbf{MF1 $\sigma$} \\
+        \midrule
+        \rowcolor{rowalt} Random Forest  & 0.6407 & 0.0069 & 0.5691 & 0.0114 & 0.6305 & 0.0078 \\
+                          SVM            & \cellcolor{green!13}\textbf{0.6772} & 0.0094 & \cellcolor{green!13}\textbf{0.6484} & 0.0098 & \cellcolor{green!13}\textbf{0.6750} & 0.0093 \\
+        \rowcolor{rowalt} Decision Tree  & 0.5499 & 0.0133 & 0.5404 & 0.0137 & 0.5496 & 0.0133 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Sentence-BERT embedding results (5-fold CV). Acc.\ = Accuracy, MF1 = Macro F1, $\sigma$ = std.\ dev.}
+    \label{tab:sbert-results}
+\end{table}
+
+Well, SVM is now back on top! 
+
+Decision Tree crumbled under pressure here, doing very poorly with the dense vectors that SBERT produces and 
+not having the ensemble like Random Forest to help it potentially intialize better. So, SVM crushes them 
+because, like stated in section \ref{freq_embed}, SVM does better in high dimensional problems. 
+
+Also, I believe that all of these values (for SVM) are better than in both section \ref{freq_embed} and 
+\ref{word_embed} because SBERT produces ``higher quality'' vectors that contain lots of information 
+between embeddings whereas the frequency and word based embeddings were missing out on a lot of 
+larger, document wide context. This means that the same word, like ``bank'' from the in class examples, 
+has different meaning based on its surrounding words, which SBERT captures, but BOW and TF-IDF can only 
+represent one word, one way. It's also worth noting that compared to the word-based embeddings task, SBERT 
+does not need dimensionality reduction to perform and outperform, which is very practical in real world 
+use cases to not need to perform extra compuations and resources on dim. reduction.
+
+What we should have seen in this report is a steady increasing of results, starting with frequency embedding 
+and coming to sentence embedding, with SBERT/USE being on top. But, Word2Vec was an outlier. So, it's 
+reassuring to see that SBERT is ultimately better than both of the other approaches.
+
+\section*{Topic Modeling}
+
+Out of interest in the BERT lineage, I decided to go with BERTopic for topic modeling. 
+
+For the topic modeling task, I did everything in one go. I tested the BERTopic model with topics (K) 
+ranging from 1 to 10. However, BERTopic showed the behavior of returning one fewer topic than was input because
+of BERTopic uses HDBSCAN clustering which could merge topics that are too similar. From my Intro to 
+Urban Computing class, as well as Machine Learning 1, DBSCAN clusters points that are similar and if 
+certain points are too close together that were topically different, they could then be clustered into 
+one topic. So, for our optimal topic number of 6, it only returned 5 different topics. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/results_topic_modeling.png}
+    \caption{Topic Modeling Results: Optimal number of topics after testing with k=2 - k=10}
+    \label{fig:topic_mod_k}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{>{\centering\arraybackslash}p{2.2cm}
+                    >{\centering\arraybackslash}p{2.2cm}
+                    >{\centering\arraybackslash}p{4.0cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{$k$} & \color{white}\textbf{Actual Topics} & \color{white}\textbf{Coherence Score} \\
+        \midrule
+        \rowcolor{rowalt} 2  & 1 & N/A \\
+                          3  & 2 & 0.4243 \\
+        \rowcolor{rowalt} 4  & 3 & 0.3833 \\
+                          5  & 4 & 0.3951 \\
+        \rowcolor{rowalt} \textbf{6}  & \textbf{5} & \cellcolor{green!13}\textbf{0.4722} \\
+                          7  & 6 & 0.4045 \\
+        \rowcolor{rowalt} 8  & 7 & 0.4311 \\
+                          9  & 8 & 0.3672 \\
+        \rowcolor{rowalt} 10 & 9 & 0.3690 \\
+        \bottomrule
+    \end{tabular}
+    \caption{BERTopic coherence scores for $k = 2$ to $k = 10$ requested topics. Highest coherence at $k=6$ (5 actual topics).}
+    \label{tab:topic-modeling}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/results_topic_modeling_wordclouds.png}
+    \caption{Topic Modeling Results: Word Cloud produced from BERTopic}
+    \label{fig:topic_mod_word}
+\end{figure}
+
+From the results, the coherence score is best when topics $k = 6$ which returns 5 topics in total. Then, 
+from those 5 returned topics, we can generate our word clouds for each topic. 
+
+The word clouds that are produced seem to have somewhat recognizable topics, but with a less than .5 
+coherence score it is difficult to discern clear topics. Topic 3 is politically and racially motivated 
+but does not have a clear grounding whereas topic 5 has a more prominent grounding of "notices within the eu".
+Topic 1 has a difficult to discern central topic from all the rest, seeming to either be general irony and 
+sarcasm but it is unclear. Finally, topic 2 is revolving around teams and games, and topic 4 is revolving 
+around media and consuming media like music and television. 
+
+\section*{Findings}
+
+Across all three embedding approaches, a winner can be crowned! Sentence-BERT (SBERT) with SVM achieved 
+the highest results overall (Acc: 0.6772, F1: 0.6484, Marco F1: 0.6750), followed by the frequency based 
+methods, and finally Word2Vec performing worst of the three methods. 
+
+The gap between BOW and TF-IDF was small but still noticable, and I believe that is because stop word 
+removal during preprocessing already eliminated a lot of common words that TF-IDF would remove, so I 
+inadvertently helped BOW be more competitive with TF-IDF.
+
+Word2Vec performing worse than BOW and TF-IDF is an outlier. The most likely causes were: the short 
+and informal nature of tweets conflicting with the Wikipedia-trained model's vocabulary and the 
+difficulty irony poses for word level embeddings because ironic language deliberately subverts 
+the expected outcome, and in this case semantic relationships the Word2Vec relies on and was likely 
+trained on. PCA consistently outperformed t-SNE, as t-SNE's 2 dimensional compression discards too much 
+global context.
+
+For topic modeling, BERTopic with an optimal $k = 6$ after sweeping through 9 different $k$ values 
+(which only yielded 5 actual topics after HDBSCAN) had the best coherence of 0.4722. The five topics 
+were rather broad and have a good amount of room for interpretation, but generally revolved around irony 
+itself, politics, race, media consumption, and the EU. When the best coherence we find is below 0.5, it 
+shows that our dataset proved difficult in extracting clean topics from short, informal, and intentionally 
+misleading/subversive text like tweets (Xeets, if you must).
+
+\section*{Code}
+
+This code is linked \href{https://drive.google.com/file/d/1EARU1KkUAKrpfGEqAsisFIZriJhQWj2b/view?usp=sharing}{here}.
+
+\bibliography{sources}
+
+\end{document}
