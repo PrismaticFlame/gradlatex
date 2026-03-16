@@ -1,0 +1,118 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+
+% Set up document metadata
+\setauthors{Tzu-Chen Chiu, Arjun Sivakumar, Mara Schimmel, Christopher Williams}
+\setheaderauthors{Chiu, Sivakumar, Schimmel, Williams}
+\settitle{Sprint 3 Report - Semester 2}
+\setclass{IPD}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{important}{Submission}
+    This document was \textbf{NOT} submitted. A quiz was used instead of accepting a PDF submission.
+\end{important}
+
+\section{Original Sprint 3 Backlog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_backlog_sem2.png}
+    \caption{Sprint 3 Backlog}
+\end{figure}
+
+\section{Sprint 3 Backlog - End of Sprint Status}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint3_backlog_sem2_end.png}
+    \caption{Sprint 3 Backlog - Updated}
+\end{figure}
+
+\section{Project Management Screenshots}
+
+The Sprint backlogs in Google Sheets are being used to manage tasks.
+
+\begin{aside}{\href{https://docs.google.com/spreadsheets/d/1E0FIjbewFiQXMTeIKEnVrVA3a1QH_6Hv9CjAknl78Ds/edit?usp=sharing}{Google Sheets}}
+    $\leftarrow$ Here is the link to the Google Sheets document. (It is the words "Google Sheets")
+\end{aside}
+
+\section{Sprint Retrospective}
+
+\subsection*{Mara}
+
+ I downloaded the cisco vpn, so now I can sign into the ARC without being on campus. 
+ In addition, I added a data class to the website, so I can more easily pass it into functions 
+ depending on the version. You can now sort by versions, which will be filled in with the 
+ proper data in the future. We also planned out more of the website layout, and I started 
+ working on filling in the version differences.
+
+\subsection*{Chris}
+
+This sprint I worked on ensuring the model architecture (yes, again) and to refine the 
+workings of the model so that it could properly use the data that Tzu-Chen created. I also 
+worked on a data packing scheme to more efficiently load the data into the model using a 
+data storing format called ``HDF5''. Next sprint, I will fix a few more issues with the model 
+and the finally queue training on the ARC. 
+
+\subsection*{Tzu-Chen}
+
+ I have finished preparing the pretraining, fine-tuning, and testing datasets. For pretraining, 
+ the new measurement and event files were generated from Google-provided Stim circuits. 
+ The dataset split and design are intended to avoid information leakage. Our goal is to train a 
+ model with the ability to generalize across \textbf{distance, number of rounds, and basis}. The next 
+ step is to convert the data into valid model inputs and design an appropriate embedding 
+ strategy for the input dimensions.
+
+\subsection*{Arjun}
+
+This week I assisted Chris and Tzu-Chen with their respective tasks and helped create the 
+best method possible to integrate both their work. Through theoretical discussion and pair 
+programming, Chris and I worked on the best possible method of getting the data into the 
+model and helped randomly sort the data for the best possible results of training the model.
+
+Intentionally Blank.
+
+\section{Product Backlog (Updated)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/Product_backlog_endof_sp3_sem2.png}
+    \caption{Product Backlog - Updated}
+\end{figure}
+
+\section{Burndown Chart}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/burndown_chart_sprint3_sem2.png}
+    \caption{Burndown Chart}
+\end{figure}
+
+\section{Issue Tracking}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Issue} & \textbf{Description} & \textbf{Status} & \textbf{Date Completed} \\ \midrule
+ARC Access & Getting all members access to ARC & Complete & 3/6/26 \\
+Ensuring data quality & Ensure correct data & Complete & 3/7/26 \\
+Refining Data Import & Streamlining Data Import & Ongoing & - \\
+Ensuring Dilations Work & Diff. Dilations for Diff. Dists. & Ongoing & - \\
+Correct Data Visuals & Compare work w/ Google Cleanly & Ongoing & - \\ 
+\end{tabular}
+\caption{Issue Tracking Summary}
+\end{table}
+
+\section{Sprint 4 Backlog - Semester 2}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{images/sprint4_backlog.png}
+    \caption{Sprint 4 Backlog}
+\end{figure}
+
+\end{document}
