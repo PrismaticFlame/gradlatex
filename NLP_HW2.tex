@@ -1,26 +1,209 @@
 \documentclass[12pt]{article}
 \usepackage{styles/cwilliams-standard}
+\usepackage{tablefootnote}
+\usepackage{multirow}
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{gray!40},
+    backgroundcolor=\color{gray!6},
+    keywordstyle=\color{blue!70},
+    stringstyle=\color{orange!80!black},
+    showstringspaces=false,
+    language=Python,
+}
 
 \setclass{\NLP}
-\settitle{Homework 2}
+\settitle{Homework 2: Affect, Perspective, and Subective Judgement}
 
 \definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
 \definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+\definecolor{modelheader}{rgb}{0.05, 0.42, 0.42}
+\definecolor{modelhighlight}{rgb}{1.0, 0.88, 0.50}
 
 \begin{document}
 
 \maketitlepage
 
-\section*{Task 1: Affective Analysis}
+\tableofcontents
 
+\begin{important}{Table Colors}
+    Each task will have different colored tables, but the functions of highlights will remain the 
+    same the entire time. I did this to make quickly scrolling through the document easier to 
+    quickly know where you are in the report. Light blue is Task 1, teal and amber is Task 2, etc..
+\end{important}
 
+\section{Affective Analysis}
 
-\section*{Task 2: Joint Modeling for Severity and Convincingness}
+\begin{enumerate}
+    \item \textbf{Leveraging lexicons provided by Mohammed et al.}
+    
+    To ``leverage'' the lexicons provided, I imported the NRC-VAD-Lexicon-v2.1 from 
+    this path: \texttt{NRC-VAD-Lexicon-v2.1/Unigrams/unigrams-NRC-VAD-Lexicon-v2.1.txt}. 
+    
+    I loaded this into a dictionary where the term is the key, and the valence, arousal, dominance (VAD) are values. 
+    This allows for a faster lookup (O(1)) and quicker processing down the line. Given that the 
+    downloaded files already have VAD provided, there was no computation that 
+    really needed to be done.
 
-\section*{Task 3: Role-Aware LLM Analysis}
+    \item \textbf{Relevant Sentence Extraction}
+    
+    Given the three focus words (spy, stalk, stealth), I went through all sentences in the dataset
+    \texttt{reviewer.csv} and used the spaCy \texttt{en\_core\_web\_sm} package to seperate each word in each of the sentences. 
+    Looping through the split sentences, I then check if the sentence contains one of the three focus words. 
+    If it does contain the focus word, save the entire sentence along with the reviewer type, add that to a list 
+    as a tuple, and the move on. 
 
-\subsection*{3A: Zero Shot \& Few-Shot Detection}
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{10cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Sentence} & \color{white}\textbf{Reviewer} \\
+            \midrule
+            \rowcolor{rowalt} I love that you can take a picture and am constantly spying on coworkers at my desk from my laptop. & abuser \\
+            This is also good to spy on someone. & third\_party \\
+            \rowcolor{rowalt} i can spy on my child whenever i want its amazing he cant go anywhere without me knowing look & abuser \\
+            Great app for families keeping track of their kids, friends or if they just wanna be creepy stalkers. & abuser \\
+            \rowcolor{rowalt} Another way of spying on people. & abuser \\
+            \bottomrule
+        \end{tabular}
+        \caption{Example Sentences Containing Focus Words}
+        \label{tab:sentences}
+    \end{table}
 
-\subsection*{3B: Comparing Performance}
+    \item \textbf{Adjective Extraction}
+    
+    For this subtask, I went through all sentences in the \texttt{reviewer.csv} and used the spaCy 
+    \texttt{en\_core\_web\_sm} package again to POS tag every word. Once every word is tagged, go through each 
+    sentence and then each word, and if the word's POS tag is ``\texttt{ADJ}'', then add that word and it's 
+    corresponding VAD scores to a dictionary where the key is the reviewer type, and the 
+    values are a list of dictionary's that have the ADJ's as keys and the values are their VAD scores.
+
+\begin{lstlisting}
+{   'third_party': [
+        {'word': 'good', 
+        'valence': 0.876, 'arousal': -0.264, 'dominance': 0.068},
+        ...
+    ],
+    'abuser': [
+        {'word': 'amazing',
+         'valence': 0.812, 'arousal': 0.674, 'dominance': 0.698}, 
+        ...
+    ],
+    'victim': [
+        {'word': 'teen',
+         'valence': 0.458, 'arousal': 0.062, 'dominance': 0.136}, 
+         ...
+    ]
+}
+\end{lstlisting}
+
+    \item \textbf{Average scores of adjectives for all dimensions}
+    
+    Using the dictionary created in the previous subtask, I go by key (reviewer type) and get all scores and average them
+    across the VAD domains. This is rather straight forward, and here are the scores that I got for this task.
+
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{4cm} p{3cm} p{3cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Reviewer} & \color{white}\textbf{Valence} & \color{white}\textbf{Arousal} & \color{white}\textbf{Dominance} \\
+            \midrule
+            \rowcolor{rowalt} third\_party & 0.186 & -0.006 & 0.055 \\
+                              abuser & 0.498 & -0.005 & 0.237 \\
+            \rowcolor{rowalt} victim & 0.100 & 0.055 & 0.034 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Average VAD Scores by Reviewer Type}
+        \label{tab:vad-averages}
+    \end{table}
+
+    \item \textbf{Compare dimensions}
+    
+    As per the table in the previous subtask, we can see there are values per reviewer type that 
+    describe emotions and intensity of emotions. 
+
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{4cm} p{3cm} p{3cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Reviewer} & \color{white}\textbf{Valence} & \color{white}\textbf{Arousal} & \color{white}\textbf{Dominance} \\
+            \midrule
+            \rowcolor{rowalt} third\_party & 0.186 & \cellcolor{red!13}\textbf{-0.006} & 0.055 \\
+                              abuser & \cellcolor{green!13}\textbf{0.498} & -0.005 & \cellcolor{green!13}\textbf{0.237} \\
+            \rowcolor{rowalt} victim & \cellcolor{red!13}\textbf{0.100} & \cellcolor{green!13}\textbf{0.055} & \cellcolor{red!13}\textbf{0.034} \\
+            \bottomrule
+        \end{tabular}
+        \caption{Average VAD Scores by Reviewer Type w/ Highest Value Highlighted. 
+        The scores highlighted red are the lowest for that VAD domain. 
+        The scores highlighted green are the highest values for that VAD domain}
+        \label{tab:vad-averages-highlighted}
+    \end{table}
+
+    Abusers appear to have very positive feelings towards ($0.498$ valence) the apps they review and feel a higher 
+    degree of control with a dominance of $0.237$ on average when reviewing about the app, showing that they feel they 
+    have control over who they are ``stalking'' or abusing. Conversely, victims have less positive feelings (although not negative) 
+    about the apps but feel more intensely about the apps with an arousal of $0.055$ on average and feel much less in control than 
+    the abusers with a dominance of $0.034$. These two go hand in hand and it makes sense overall that the third\_party reviwers do not have particular strong 
+    feelings towards this app as they are not the ones using the apps. 
+
+    Third\_party reviewers have more positive feelings about this than victims which does make sense given that 
+    they are not experiencing the effects of these apps and are only commenting on them. And, they seem to feel 
+    more in control than victims which also makes sense.
+
+    Ultimately, it appears that abusers feel the most in control in relation to these apps, victims feel the 
+    least positive and in control, and third\_party is in between.
+
+\end{enumerate}
+
+\section{Joint Modeling for Severity and Convincingness}
+
+For this task, I selected BERT and DistilBERT for the two models that I will be comparing. 
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l l c c c c}
+        \toprule
+        \rowcolor{modelheader}
+        \color{white}\textbf{Model} & \color{white}\textbf{Type} & \color{white}\textbf{Precision} & \color{white}\textbf{Recall} & \color{white}\textbf{F1} & \color{white}\textbf{Macro F1} \\
+        \midrule
+        \multirow{2}{*}{BERT}       & Severity       & \cellcolor{modelhighlight}\textbf{0.7480} & \cellcolor{modelhighlight}\textbf{0.7401} & \cellcolor{modelhighlight}\textbf{0.7336} & \multirow{2}{*}{0.6755} \\
+                                     & Convincingness & 0.6392 & 0.6378 & 0.6174 & \\
+        \cmidrule{1-6}
+                          \multirow{2}{*}{DistilBERT} & Severity       & 0.7140 & 0.7280 & 0.7190 & \multirow{2}{*}{0.6817} \\
+                                                       & Convincingness & \cellcolor{modelhighlight}\textbf{0.6978} & \cellcolor{modelhighlight}\textbf{0.6543} & \cellcolor{modelhighlight}\textbf{0.6444} & \\
+        \bottomrule
+    \end{tabular}
+    \caption{BERT vs.\ DistilBERT Classification Performance. Amber highlighted cells show the best
+    performance for that type across models. One cell could be read as ``BERT has the best score for
+    precision in severity across both models''}
+    \label{tab:model-comparison}
+\end{table}
+
+\section{Role-Aware LLM Analysis}
+
+\subsection{Zero Shot \& Few-Shot Detection}
+
+\subsection{Comparing Performance}
+
+\section{Code}
+
+% #TODO
+\begin{aside}{Provided Code}
+    The code is provided with this submission on Canvas, but in case something is not correct 
+    or does not work, \href{github}{here} is the link to the repo on Github.
+\end{aside}
 
 \end{document}
