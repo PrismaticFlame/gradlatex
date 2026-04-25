@@ -1,0 +1,544 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+\usepackage{tablefootnote}
+\usepackage{tcolorbox}
+\usepackage{multirow}
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=8pt,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{gray!40},
+    backgroundcolor=\color{gray!6},
+    keywordstyle=\color{blue!70},
+    stringstyle=\color{orange!80!black},
+    showstringspaces=false,
+    language=Python,
+}
+
+\setclass{\NLP}
+\settitle{Homework 2: Affect, Perspective, and Subective Judgement}
+
+\definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+\definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+\definecolor{modelheader}{rgb}{0.05, 0.42, 0.42}
+\definecolor{modelhighlight}{rgb}{1.0, 0.88, 0.50}
+\definecolor{llmheader}{rgb}{0.45, 0.08, 0.15}
+\definecolor{llmrowalt}{rgb}{0.98, 0.94, 0.94}
+\definecolor{llmhighlight}{rgb}{0.68, 0.92, 0.78}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{important}{Provided Code}
+    The code files provided are meant to be looked over as Task1.py, Task2.py, and 
+    Task3\_Cerebras.py. The other Task3.py is the method I used to query Gemini, but 
+    that is not where (the majority of) my examples come from.
+\end{important}
+
+\tableofcontents
+
+\section{Preprocessing}
+
+All three tasks share a common data loading step applied to reviewer.csv. The file contains 
+a saved row index as an unnamed first column, which is absorbed with index\_col=0 to prevent 
+it from being treated as a data column. Review bodies are decoded for HTML entities 
+(e.g., \texttt{\&\#39; → '}) using Python's \texttt{html.unescape()}, as the raw CSV contains browser-escaped 
+characters from the original web scrape. Rows whose Victim/Abuser/Third label is not one of 
+A, V, or T, primarily P (Potential) entries, are dropped, as they do not correspond to 
+any of the three target classes.
+
+\section{Affective Analysis}
+
+\begin{enumerate}
+    \item \textbf{Leveraging lexicons provided by Mohammed et al.}
+    
+    To ``leverage'' the lexicons provided, I imported the NRC-VAD-Lexicon-v2.1 from 
+    this path: \texttt{NRC-VAD-Lexicon-v2.1/Unigrams/unigrams-NRC-VAD-Lexicon-v2.1.txt}. 
+    
+    I loaded this into a dictionary where the term is the key, and the valence, arousal, dominance (VAD) are values. 
+    This allows for a faster lookup (O(1)) and quicker processing down the line. Given that the 
+    downloaded files already have VAD provided, there was no computation that 
+    really needed to be done.
+
+    \item \textbf{Relevant Sentence Extraction}
+    
+    Given the three focus words (spy, stalk, stealth), I went through all sentences in the dataset
+    \texttt{reviewer.csv} and used the spaCy \texttt{en\_core\_web\_sm} package to seperate each word in each of the sentences. 
+    Looping through the split sentences, I then check if the sentence contains one of the three focus words. 
+    If it does contain the focus word, save the entire sentence along with the reviewer type, add that to a list 
+    as a tuple, and the move on. 
+
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{10cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Sentence} & \color{white}\textbf{Reviewer} \\
+            \midrule
+            \rowcolor{rowalt} I love that you can take a picture and am constantly spying on coworkers at my desk from my laptop. & abuser \\
+            This is also good to spy on someone. & third\_party \\
+            \rowcolor{rowalt} i can spy on my child whenever i want its amazing he cant go anywhere without me knowing look & abuser \\
+            Great app for families keeping track of their kids, friends or if they just wanna be creepy stalkers. & abuser \\
+            \rowcolor{rowalt} Another way of spying on people. & abuser \\
+            \bottomrule
+        \end{tabular}
+        \caption{Example Sentences Containing Focus Words}
+        \label{tab:sentences}
+    \end{table}
+
+    \item \textbf{Adjective Extraction}
+    
+    For this subtask, I went through all sentences in the \texttt{reviewer.csv} and used the spaCy 
+    \texttt{en\_core\_web\_sm} package again to POS tag every word. Once every word is tagged, go through each 
+    sentence and then each word, and if the word's POS tag is ``\texttt{ADJ}'', then add that word and it's 
+    corresponding VAD scores to a dictionary where the key is the reviewer type, and the 
+    values are a list of dictionary's that have the ADJ's as keys and the values are their VAD scores.
+
+\begin{lstlisting}
+{   'third_party': [
+        {'word': 'good', 
+        'valence': 0.876, 'arousal': -0.264, 'dominance': 0.068},
+        ...
+    ],
+    'abuser': [
+        {'word': 'amazing',
+         'valence': 0.812, 'arousal': 0.674, 'dominance': 0.698}, 
+        ...
+    ],
+    'victim': [
+        {'word': 'teen',
+         'valence': 0.458, 'arousal': 0.062, 'dominance': 0.136}, 
+         ...
+    ]
+}
+\end{lstlisting}
+
+    \item \textbf{Average scores of adjectives for all dimensions}
+    
+    Using the dictionary created in the previous subtask, I go by key (reviewer type) and get all scores and average them
+    across the VAD domains. This is rather straight forward, and here are the scores that I got for this task.
+
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{4cm} p{3cm} p{3cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Reviewer} & \color{white}\textbf{Valence} & \color{white}\textbf{Arousal} & \color{white}\textbf{Dominance} \\
+            \midrule
+            \rowcolor{rowalt} third\_party & 0.186 & -0.006 & 0.055 \\
+                              abuser & 0.498 & -0.005 & 0.237 \\
+            \rowcolor{rowalt} victim & 0.100 & 0.055 & 0.034 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Average VAD Scores by Reviewer Type}
+        \label{tab:vad-averages}
+    \end{table}
+
+    \item \textbf{Compare dimensions}
+    
+    As per the table in the previous subtask, we can see there are values per reviewer type that 
+    describe emotions and intensity of emotions. 
+
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.4}
+        \begin{tabular}{p{4cm} p{3cm} p{3cm} p{3cm}}
+            \toprule
+            \rowcolor{tableheader}
+            \color{white}\textbf{Reviewer} & \color{white}\textbf{Valence} & \color{white}\textbf{Arousal} & \color{white}\textbf{Dominance} \\
+            \midrule
+            \rowcolor{rowalt} third\_party & 0.186 & \cellcolor{red!13}\textbf{-0.006} & 0.055 \\
+                              abuser & \cellcolor{green!13}\textbf{0.498} & -0.005 & \cellcolor{green!13}\textbf{0.237} \\
+            \rowcolor{rowalt} victim & \cellcolor{red!13}\textbf{0.100} & \cellcolor{green!13}\textbf{0.055} & \cellcolor{red!13}\textbf{0.034} \\
+            \bottomrule
+        \end{tabular}
+        \caption{Average VAD Scores by Reviewer Type w/ Highest Value Highlighted. 
+        The scores highlighted red are the lowest for that VAD domain. 
+        The scores highlighted green are the highest values for that VAD domain}
+        \label{tab:vad-averages-highlighted}
+    \end{table}
+
+    Abusers appear to have very positive feelings towards ($0.498$ valence) the apps they review and feel a higher 
+    degree of control with a dominance of $0.237$ on average when reviewing about the app, showing that they feel they 
+    have control over who they are ``stalking'' or abusing. Conversely, victims have less positive feelings (although not negative) 
+    about the apps but feel more intensely about the apps with an arousal of $0.055$ on average and feel much less in control than 
+    the abusers with a dominance of $0.034$. These two go hand in hand and it makes sense overall that the third\_party reviwers do not have particular strong 
+    feelings towards this app as they are not the ones using the apps. 
+
+    Third\_party reviewers have more positive feelings about this than victims which does make sense given that 
+    they are not experiencing the effects of these apps and are only commenting on them. And, they seem to feel 
+    more in control than victims which also makes sense.
+
+    Ultimately, it appears that abusers feel the most in control in relation to these apps, victims feel the 
+    least positive and in control, and third\_party is in between.
+
+\end{enumerate}
+
+\section{Joint Modeling for Severity and Convincingness}
+
+For this task, I selected BERT and DistilBERT for the two models that I will be comparing. 
+
+For Task 2, the continuous severity and convincingness scores (1–5 scale) are discretized 
+into three ordinal bins: low ($\leq 2$), medium ($2 < s \leq 3$), and high ($> 3$). Each 
+review is then encoded as a 6-dimensional binary label vector combining both tasks, and 
+tokenized using each model's pretrained tokenizer with truncation and padding to 128 tokens.
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l l c c c c}
+        \toprule
+        \rowcolor{modelheader}
+        \color{white}\textbf{Model} & \color{white}\textbf{Type} & \color{white}\textbf{Precision} & \color{white}\textbf{Recall} & \color{white}\textbf{F1} & \color{white}\textbf{Macro F1} \\
+        \midrule
+        \multirow{2}{*}{BERT}       & Severity       & \cellcolor{modelhighlight}\textbf{0.7480} & \cellcolor{modelhighlight}\textbf{0.7401} & \cellcolor{modelhighlight}\textbf{0.7336} & \multirow{2}{*}{0.6755} \\
+                                     & Convincingness & 0.6392 & 0.6378 & 0.6174 & \\
+        \cmidrule{1-6}
+                          \multirow{2}{*}{DistilBERT} & Severity       & 0.7140 & 0.7280 & 0.7190 & \multirow{2}{*}{0.6817} \\
+                                                       & Convincingness & \cellcolor{modelhighlight}\textbf{0.6978} & \cellcolor{modelhighlight}\textbf{0.6543} & \cellcolor{modelhighlight}\textbf{0.6444} & \\
+        \bottomrule
+    \end{tabular}
+    \caption{BERT vs.\ DistilBERT Classification Performance. Amber highlighted cells show the best
+    performance for that type across models. One cell could be read as ``BERT has the best score for
+    precision in severity across both models''}
+    \label{tab:model-comparison}
+\end{table}
+
+Table~\ref{tab:model-comparison} reports Precision, Recall, and F1 for each task and Macro F1 across
+5-fold cross-validation. Both models predict severity more reliably than convincingness, 
+BERT achieves F1 of 0.7336 vs.\ 0.6174, and DistilBERT 0.7190 vs.\ 0.6444. This gap likely reflects 
+that severity is more directly signaled by lexical features (explicit threat or harm language), 
+whereas convincingness is a more subjective property requiring inference beyond surface wording.
+
+BERT outperforms DistilBERT on severity across all three metrics (P: 0.7480 vs.\ 0.7140, R: 0.7401 
+vs.\ 0.7280, F1: 0.7336 vs.\ 0.7190), suggesting its larger capacity better captures the linguistic 
+markers that distinguish severity levels. However, DistilBERT outperforms BERT on convincingness 
+(F1: 0.6444 vs.\ 0.6174) and achieves a higher overall Macro F1 (0.6817 vs.\ 0.6755). The task gap 
+is also narrower for DistilBERT (0.0746) than for BERT (0.1162), indicating more balanced joint learning.
+
+I prefer \textbf{DistilBERT} for this task. Although BERT achieves the best individual score on severity, the 
+task of joint prediction, where both targets must be predicted well simultaneously, is more suited to 
+DistilBERT. The models higher Macro F1 and smaller inter-task performance gap make it the stronger 
+joint model. Also, DistilBERT has 40\% fewer parameters than BERT, trainig approximately twice as 
+fast with only marginal accuracy loss, which is an advantage (in my book) in a cross-validation schema.
+
+\section{Role-Aware LLM Analysis}
+
+\begin{important}
+    For all prompts, Cerebras and Gemini, I used \textit{Chain of Thought} prompting.
+\end{important}
+
+For Task 3, the labeled portion of reviewer.csv is split into a 203-sample pool for 
+few-shot example selection and a 200-sample held-out test set. For cosine similarity 
+retrieval, all pool and test texts are jointly fit to a TF-IDF vectorizer with a 
+5,000-feature vocabulary and English stop word removal, producing sparse document 
+vectors used to compute pairwise similarity at inference time.
+
+I initially used the assignment given Gemini 2.5 Flash Lite model. Given some 
+restrictions on the rate limits, I found that using the Gemini 3 Flash (preview) model allowed for 
+more requests, and the TA (thank you Nikhil) recommend using Cerebras Llama 3.1-8B which had unlimited 
+(or for our use case \textit{essentially} unlimited) calls.
+
+When I began API calls nearly a week and some in advance, the rate limits were going to make this difficult. The RPD 
+(requests per day) for the Gemini 2.5 Flash Lite was said to be 1000. A potential work around I thought of was to use 
+three API keys (on separate accounts) to grant myself higher rates because I was getting many 429 errors (too busy, too many 
+people using the API). But, it turned out, that 2.5 has a rate limit of \textbf{20} requests per day. That was not 
+going to cut it. So, I switched to Gemini 3 Flash (3 API Keys), and then Cerebras (1 API Key).
+
+Long story short, this section will have the results of the Cerebras model with some minor 
+comparisons between Gemini 3 and Llama 3.1 to see if there is a strong difference between the 
+model sizes in the role aware analysis.
+
+\subsection{Zero Shot \& Few-Shot Detection (Gemini and Llama)}
+
+Here is the system prompt that I used:
+
+\begin{tcolorbox}[
+    title=System Prompt,
+    colback=llmrowalt,
+    colframe=llmheader,
+    colbacktitle=llmheader,
+    coltitle=white,
+    fonttitle=\bfseries\small,
+    fontupper=\ttfamily\small,
+    boxrule=0.6pt,
+    arc=3pt,
+]
+You are a text classifier. Given an app review, classify the narrator's role as one of:
+
+\smallskip
+\hspace*{1em}\textbf{Abuser (A):} The reviewer is using or endorses using the app to spy on, stalk, or control someone.\\
+\hspace*{1em}\textbf{Victim (V):} The reviewer is someone being spied on, stalked, or controlled through the app.\\
+\hspace*{1em}\textbf{Third-party (T):} The reviewer is a neutral observer commenting on the app without being an abuser or victim.
+
+\smallskip
+Think step by step about who the narrator is and their relationship to surveillance/stalking.
+
+After your reasoning, write your final answer on the last line as: 
+
+\textbf{ANSWER: A}, \textbf{ANSWER: V}, or \textbf{ANSWER: T}.
+\end{tcolorbox}
+
+Every system prompt was then either appended with the example that it needs to classify (zero-shot)
+or a few examples and then the example it needs to classify (few-shot)
+
+\vspace{0.5em}
+\begin{tcbraster}[
+    raster columns=2,
+    raster column skip=0.04\textwidth,
+    raster valign=top,
+    colback=llmrowalt,
+    colframe=llmheader,
+    colbacktitle=llmheader,
+    coltitle=white,
+    fonttitle=\bfseries\small,
+    fontupper=\ttfamily\small,
+    boxrule=0.6pt,
+    arc=3pt,
+]
+\begin{tcolorbox}[title=Zero-Shot]
+Classify this review: Awesome app can spy on people or set up in my front window
+\end{tcolorbox}
+\begin{tcolorbox}[title=Few-Shot]
+Here are some examples:
+
+\textbf{Example 1:}
+
+\textbf{Review:} Awesome app can spy on people or set up in my front window
+
+\textbf{Label:} A
+
+\textbf{Example 2:}
+
+\textbf{Review:} Now spying on my roommate is one of my 79 daily tasks.
+
+\textbf{Label:} A
+
+Now classify this review: ``This is the worst update ever! Why would you do this?!
+It was the best app, now I can't stalk anymore lol''
+\end{tcolorbox}
+\end{tcbraster}
+
+\vspace{0.5em}
+
+With these two prompts, this got all my results. This was the format for all queries to 
+Llama 3.1 - 8B and Gemini 3 Flash. The Few-Shot prompting was cycled through 
+with multiple $k$ values (the number of examples) (the example above is K = 2) 
+for all hand picked, random, and cosine chosen examples. For cosine few-shot specifically, 
+I created TF-IDF vectors for all reviews, and then find the K closest TF-IDF vectors of 
+other reviews to the test example (i.e., find the 2 closest reviews to the review we 
+want to classify).  
+
+\vspace{0.5em}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l l c c c c}
+        \toprule
+        \rowcolor{llmheader}
+        \color{white}\textbf{Experiment} & \color{white}\textbf{Class} & \color{white}\textbf{Precision} & \color{white}\textbf{Recall} & \color{white}\textbf{F1} & \color{white}\textbf{Macro F1} \\
+        \midrule
+        \multirow{3}{*}{Zero-shot}
+            & Abuser      & 0.8077 & 0.8750 & 0.8400 & \multirow{3}{*}{0.5014} \\
+            & Victim      & 0.5179 & 0.6744 & 0.5859 & \\
+            & Third-party & 0.1429 & 0.0541 & 0.0784 & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Few-shot Handpicked ($k$=2)}
+            & Abuser      & 0.8417 & 0.8417 & 0.8417 & \multirow{3}{*}{0.5786} \\
+            & Victim      & \cellcolor{llmhighlight}\textbf{0.5652} & 0.6047 & 0.5843 & \\
+            & Third-party & \cellcolor{llmhighlight}\textbf{0.3235} & \cellcolor{llmhighlight}\textbf{0.2973} & \cellcolor{llmhighlight}\textbf{0.3099} & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Few-shot Random ($k$=5)}
+            & Abuser      & 0.8092 & \cellcolor{llmhighlight}\textbf{0.8833} & 0.8446 & \multirow{3}{*}{0.5465} \\
+            & Victim      & 0.5400 & 0.6279 & 0.5806 & \\
+            & Third-party & 0.3158 & 0.1622 & 0.2143 & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Few-shot Cosine ($k$=5)}
+            & Abuser      & \cellcolor{llmhighlight}\textbf{0.8750} & 0.8167 & \cellcolor{llmhighlight}\textbf{0.8448} & \multirow{3}{*}{0.5733} \\
+            & Victim      & 0.5362 & \cellcolor{llmhighlight}\textbf{0.8605} & \cellcolor{llmhighlight}\textbf{0.6607} & \\
+            & Third-party & 0.3158 & 0.1622 & 0.2143 & \\
+        \bottomrule
+    \end{tabular}
+    \caption{Per-class performance for key Cerebras (Llama 3.1-8B) experiments.
+    Mint cells show the best value for that class and metric across all four experiments. e.g., 
+    the best recall for Abuser is the Few-shot Random ($k$=5).}
+    \label{tab:Cerebras-perclass}
+\end{table}
+
+
+Table~\ref{tab:Cerebras-perclass} reveals a pattern driven primarily by class imbalance: 
+with Abuser comprising 60\% of the test set, all four experiments classify it reliably (F1 0.840--0.845), 
+while the minority classes Victim (21.5\%) and Third-party (18.5\%) show weaker classification.
+
+Zero-shot performs competitively on Abuser but nearly fails on Third-party (F1=0.078, recall=0.054). 
+Without examples to anchor minority class boundaries, the model defaults heavily toward predicting
+ Abuser, treating ambiguous reviews as the majority class by default.
+
+Few-shot Handpicked ($k$=2) produces the most balanced results. Introducing just two curated examples 
+raises Third-party F1 from 0.078 to 0.310 — a fourfold improvement and the largest single gain 
+across all cells in the table. This is because Third-party is a subtle category requiring a concrete 
+demonstration of neutral observation, which curated examples directly provide. Handpicked also achieves 
+the highest Victim precision (0.5652) and the best Macro F1 overall (0.5786), making it the strongest 
+general-purpose strategy.
+
+Few-shot Random ($k$=5) achieves the highest Abuser recall (0.8833), slightly outperforming 
+zero-shot's 0.8750. Stratified random sampling ensures exposure to a variety of Abuser phrasings, 
+which sharpens the model's sensitivity to that class. However, Random offers no improvement over Cosine 
+on Third-party — both score identically (F1=0.214) — suggesting that at $k$=5, randomly selected 
+examples are no less informative than similarity-retrieved ones for that class. This likely 
+reflects the small Third-party pool size: cosine retrieval frequently returns Abuser or Victim 
+neighbors regardless, providing no class-specific signal beyond what random selection would offer.
+
+Few-shot Cosine ($k$=5) takes a different trade-off. It achieves the best Victim recall 
+(0.8605) and F1 (0.6607) by retrieving the most lexically similar pool examples for each test 
+review. Victim reviews are contextually diverse — a parent tracking a child, a partner being 
+monitored, an employee under surveillance — so finding a similar labeled example per test 
+case anchors the prediction more effectively than fixed handpicked or random ones. However, 
+this benefit does not extend to Third-party, where Handpicked remains superior.
+
+Overall, no single strategy dominates across all classes. Handpicked ($k$=2) is preferred when 
+balanced class coverage and Macro F1 are the priority, while Cosine ($k$=5) is the better choice 
+when Victim recall is critical.
+
+\subsection{Comparing Performance}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l l c c c c}
+        \toprule
+        \rowcolor{llmheader}
+        \color{white}\textbf{Strategy} & \color{white}\textbf{Class} & \color{white}\textbf{Precision} & \color{white}\textbf{Recall} & \color{white}\textbf{F1} & \color{white}\textbf{Macro F1} \\
+        \midrule
+        \multirow{3}{*}{Zero-shot}
+            & Abuser      & 0.8077 & 0.8750 & 0.8400 & \multirow{3}{*}{0.5014} \\
+            & Victim      & 0.5179 & 0.6744 & 0.5859 & \\
+            & Third-party & 0.1429 & 0.0541 & 0.0784 & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Handpicked ($k$=2)}
+            & Abuser      & 0.8417 & 0.8417 & 0.8417 & \multirow{3}{*}{\textbf{0.5786}} \\
+            & Victim      & \cellcolor{llmhighlight}\textbf{0.5652} & 0.6047 & 0.5843 & \\
+            & Third-party & \cellcolor{llmhighlight}\textbf{0.3235} & \cellcolor{llmhighlight}\textbf{0.2973} & \cellcolor{llmhighlight}\textbf{0.3099} & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Random ($k$=5)}
+            & Abuser      & 0.8092 & \cellcolor{llmhighlight}\textbf{0.8833} & 0.8446 & \multirow{3}{*}{0.5465} \\
+            & Victim      & 0.5400 & 0.6279 & 0.5806 & \\
+            & Third-party & 0.3158 & 0.1622 & 0.2143 & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Cosine ($k$=5)}
+            & Abuser      & \cellcolor{llmhighlight}\textbf{0.8750} & 0.8167 & \cellcolor{llmhighlight}\textbf{0.8448} & \multirow{3}{*}{0.5733} \\
+            & Victim      & 0.5362 & \cellcolor{llmhighlight}\textbf{0.8605} & \cellcolor{llmhighlight}\textbf{0.6607} & \\
+            & Third-party & 0.3158 & 0.1622 & 0.2143 & \\
+        \bottomrule
+    \end{tabular}
+    \caption{Cerebras (Llama 3.1-8B) per-class performance by example selection strategy
+    at best $k$. Mint cells show the best value for that class and metric across all strategies.}
+    \label{tab:Cerebras-strategy}
+\end{table}
+
+
+We can see that the Zero-shot method did not win in any of the strategies, and this stands to reason 
+that without examples, the LLM would have a lot of difficultly learning its task given its prompt. 
+It's also important to point out (for myself) that the Handpicked examples achieved the highest 
+Macro-F1 and greatest amount of classification for Third-party and precision for victim. It is 
+also impressive that handpicked peaked at $k$=2 whereas Random and Cosine had to go to $k$=5 suggests that 
+quality matters more than quantity. Two carefully chosen examples outperform five randomly or 
+automatically retrieved ones in overall accuracy. 
+
+Random sits between the two in F1 (0.5465) but requires $k$=5 to reach that ceiling, 
+making it the least efficient strategy. The narrow gap between Handpicked (0.5786) and Cosine 
+(0.5733) at their respective best $k$ values indicates that both approaches are competitive 
+at the macro level, with the distinction emerging only in per-class analysis where their 
+trade-offs become apparent.
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{l l c c c c}
+        \toprule
+        \rowcolor{llmheader}
+        \color{white}\textbf{Model} & \color{white}\textbf{Class} & \color{white}\textbf{Precision} & \color{white}\textbf{Recall} & \color{white}\textbf{F1} & \color{white}\textbf{Macro F1} \\
+        \midrule
+        \multirow{3}{*}{Gemini 3 Flash (Preview)}
+            & Abuser      & \cellcolor{llmhighlight}\textbf{0.8250} & 0.8250 & 0.8250 &  \\
+            & Victim      & \cellcolor{llmhighlight}\textbf{0.5800} & \cellcolor{llmhighlight}\textbf{0.6744} & \cellcolor{llmhighlight}\textbf{0.6237} & \textbf{0.5923} \\
+            & Third-party & \cellcolor{llmhighlight}\textbf{0.3667} & \cellcolor{llmhighlight}\textbf{0.2973} & \cellcolor{llmhighlight}\textbf{0.3284} & \\
+        \cmidrule{1-6}
+        \multirow{3}{*}{Cerebras Llama 3.1-8B}
+            & Abuser      & 0.8077 & \cellcolor{llmhighlight}\textbf{0.8750} & \cellcolor{llmhighlight}\textbf{0.8400} & \multirow{3}{*}{0.5014} \\
+            & Victim      & 0.5179 & \cellcolor{llmhighlight}\textbf{0.6744} & 0.5859 & \\
+            & Third-party & 0.1429 & 0.0541 & 0.0784 & \\
+        \bottomrule
+    \end{tabular}
+    \caption{Zero-shot performance comparison between Gemini 3 Flash (Preview) and Cerebras
+    Llama 3.1-8B. Mint cells show the best value per class and metric across both models.
+    V Recall is tied at 0.6744.}
+    \label{tab:model-zeroshot}
+\end{table}
+
+This is the most impressive table from my experiments with prompting the LLM's. Given that rate limits 
+were making API calling slow and difficult, I was only able to complete Zero-shot calling Gemini. 
+The Few-shot experiments were incomplete (even with 3 API keys) and did not finish, so I can not reasonably 
+make comparisons between the Few-shot experiments.
+
+Within zero-shot, Gemini 3 Flash outperforms Cerebras Llama 3.1-8B overall 
+(Macro F1: 0.5923 vs.\ 0.5014), with the gap driven almost entirely by Third-party detection. Gemini 
+achieves a Third-party F1 of 0.3284 compared to Cerebras's 0.0784, a fourfold difference, suggesting 
+that the larger, more instruction-tuned model better recognizes neutral observers without any examples 
+to guide it. This is consistent with the expectation that stronger zero-shot instruction-following 
+correlates with model scale and alignment training.
+
+Cerebras, however, outperforms Gemini on Abuser Recall (0.8750 vs.\ 0.8250) and Abuser F1 
+(0.8400 vs.\ 0.8250). This likely reflects the tendency of smaller models to default toward the 
+majority class, which is a bias that incidentally helps recall on Abuser but collapses performance on 
+Third-party. Both models tie exactly on Victim Recall (0.6744), suggesting similar sensitivity to 
+victim-indicating language even across a large difference in model size.
+
+\section{Ethics}
+
+This work involves sensitive subject matter: app reviews written in the context of 
+surveillance, stalking, and domestic control. This raises several ethical 
+considerations that informed both the methodology and interpretation of results.
+
+The NRC VAD Lexicon used in Task 1 was itself constructed with ethical safeguards: 
+approximately 200 entries associated with identity group terms, slurs, or taboo 
+language were removed by the lexicon authors to prevent harmful associations 
+from propagating into downstream analyses. As noted in the lexicon's documentation, 
+affective scores reflect historical annotator perceptions and may embed cultural 
+biases, particularly for terms associated with marginalized groups. Results from 
+Task 1 should therefore be interpreted as reflecting patterns in reviewer 
+language rather than objective affective ground truth.
+
+In Task 3, reviews are sent to third-party API providers (Google Gemini 
+and Cerebras) for classification. This means potentially sensitive review
+content including descriptions of stalking, spousal surveillance, and 
+child tracking is transmitted to external servers. In a production or 
+clinical setting, this would require explicit data handling agreements 
+and user consent.
+
+The classification task itself carries asymmetric risks of misclassification. 
+Labeling a victim as an abuser, or an abuser as a third party, could have 
+serious consequences in any real-world application of such a system. The 
+models consistently underperform on the Victim and Third-party classes 
+due to label imbalance, meaning the groups most in need of accurate 
+identification are precisely those the models handle least reliably. 
+Any deployment of these classifiers would require either rebalancing 
+strategies or human review of low-confidence predictions before any 
+consequential action is taken.
+
+\section{Code}
+
+\begin{aside}{Provided Code}
+    The code is provided with this submission on Canvas, but in case something is not correct 
+    or does not work, \href{https://drive.google.com/drive/folders/1W0iUTP5_-hPrcNcUi155nI08rTYZorFQ?usp=sharing}{here} is the link to the files on Google Drive.
+\end{aside}
+
+\end{document}
