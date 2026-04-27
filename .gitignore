@@ -1,8 +1,10 @@
-.vscode
+# Created by venv; see https://docs.python.org/3/library/venv.html
+bin/
 build/
-book/
-personal/
-*.xlsx
-*.mp4
-images/ML_term_proj/
-HomeServer.tex
+lib/
+lib64
+pyvenv.cfg
+build
+.vscode
+.idea
+include/
