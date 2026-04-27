@@ -8,3 +8,12 @@ build
 .vscode
 .idea
 include/
+
+book/
+HomeServer.tex
+cyberpower_*
+floor_plan_*
+razer_blade_*
+synology_*
+thumbnail-blade*
+ugreen_DAS_*
