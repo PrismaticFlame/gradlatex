@@ -1,0 +1,223 @@
+\documentclass[12pt]{article}
+\usepackage{styles/cwilliams-standard}
+\usepackage{tcolorbox}
+\usepackage{pifont}
+\tcbuselibrary{raster,skins}
+
+\setclass{\IPDTwo}
+\settitle{Planning Your Future Goals}
+
+\definecolor{tableheader}{rgb}{0.18, 0.32, 0.55}
+\definecolor{rowalt}{rgb}{0.93, 0.95, 0.98}
+
+\definecolor{goalgrad}{rgb}{0.10, 0.25, 0.55}
+\definecolor{goalfive}{rgb}{0.08, 0.48, 0.35}
+\definecolor{goaldec}{rgb}{0.45, 0.12, 0.48}
+
+\definecolor{goldrank}{rgb}{0.80, 0.60, 0.05}
+\definecolor{silverrank}{rgb}{0.55, 0.55, 0.60}
+\definecolor{bronzerank}{rgb}{0.70, 0.38, 0.15}
+\definecolor{ironrank}{rgb}{0.38, 0.38, 0.40}
+
+\newcommand{\cmark}{\textcolor{green!60!black}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
+
+\begin{document}
+
+\maketitlepage
+
+\begin{aside}{Extra-ness}
+    I decided to make this document a little more visually interesting just so that you haves something 
+    interesting to look at.
+\end{aside}
+
+\section{Future Goals}
+
+\begin{tcbraster}[
+    raster columns=3,
+    raster column skip=0.03\textwidth,
+    raster valign=top,
+    fonttitle=\bfseries\small,
+    boxrule=0.6pt,
+    arc=4pt,
+]
+\begin{tcolorbox}[
+    title={\ding{72}\ After Graduation},
+    colback=goalgrad!8,
+    colframe=goalgrad,
+    colbacktitle=goalgrad,
+    coltitle=white,
+]
+\textbf{Be prepared for technical interviews} at Software Engineering or Quantum Computing companies.
+\end{tcolorbox}
+\begin{tcolorbox}[
+    title={\ding{72}\ Five Years},
+    colback=goalfive!8,
+    colframe=goalfive,
+    colbacktitle=goalfive,
+    coltitle=white,
+]
+\textbf{Working at a first or second company} in a place I enjoy, settled with community and hobbies.
+\end{tcolorbox}
+\begin{tcolorbox}[
+    title={\ding{72}\ Ten Years},
+    colback=goaldec!8,
+    colframe=goaldec,
+    colbacktitle=goaldec,
+    coltitle=white,
+]
+\textbf{Settled at a second or third company} in a new place, with a ``home base'' to return to.
+\end{tcolorbox}
+\end{tcbraster}
+
+\section{Futures Related to Product}
+
+\begin{tcbraster}[
+    raster columns=2,
+    raster column skip=0.03\textwidth,
+    raster equal height=rows,
+    fonttitle=\bfseries,
+    boxrule=0.6pt,
+    arc=4pt,
+    colback=tableheader!6,
+    colframe=tableheader,
+    colbacktitle=tableheader,
+    coltitle=white,
+]
+\begin{tcolorbox}[title={Outcome 1}]
+Quantum Error Correction Engineering Job
+\end{tcolorbox}
+\begin{tcolorbox}[title={Outcome 2}]
+Quantum Error Correction Company
+\end{tcolorbox}
+\begin{tcolorbox}[title={Outcome 3}]
+AI/ML Engineer
+\end{tcolorbox}
+\begin{tcolorbox}[title={Outcome 4}]
+Data Scientist
+\end{tcolorbox}
+\end{tcbraster}
+
+\section{Goals Matrix}
+
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{p{4.5cm}
+                    >{\centering\arraybackslash}p{2.5cm}
+                    >{\centering\arraybackslash}p{2.5cm}
+                    >{\centering\arraybackslash}p{2.5cm}
+                    >{\centering\arraybackslash}p{2.5cm}}
+        \toprule
+        \rowcolor{tableheader}
+        \color{white}\textbf{Goals / Outcome} &
+        \cellcolor{silverrank}\color{white}\textbf{Outcome 1} &
+        \cellcolor{bronzerank}\color{white}\textbf{Outcome 2} &
+        \cellcolor{goldrank}\color{white}\textbf{Outcome 3} &
+        \cellcolor{ironrank}\color{white}\textbf{Outcome 4} \\
+        \midrule
+        \textbf{Goal 1} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{red!12}{\Large\xmark} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{red!12}{\Large\xmark} \\
+        \textbf{Goal 2} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{red!12}{\Large\xmark} \\
+        \textbf{Goal 3} &
+        \cellcolor{red!12}{\Large\xmark} &
+        \cellcolor{red!12}{\Large\xmark} &
+        \cellcolor{green!18}{\Large\cmark} &
+        \cellcolor{red!12}{\Large\xmark} \\
+        \midrule
+        \textbf{Score} &
+        \cellcolor{silverrank!25} 2 / 3 &
+        \cellcolor{bronzerank!25} 1 / 3 &
+        \cellcolor{goldrank!25}\textbf{\ding{72}\ 3 / 3} &
+        \cellcolor{ironrank!25} 0 / 3 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Future Goals Planning Matrix. Outcome headers colored by priority rank
+    (gold = \#1, silver = \#2, bronze = \#3, iron = \#4).}
+    \label{tab:goals-matrix}
+\end{table}
+
+\section{Prioritized Outcomes}
+
+\begin{tcbraster}[
+    raster columns=4,
+    raster column skip=0.02\textwidth,
+    raster equal height=rows,
+    fonttitle=\bfseries\Large,
+    boxrule=0.8pt,
+    arc=4pt,
+    halign title=center,
+    halign=center,
+]
+\begin{tcolorbox}[
+    title={\#1},
+    colback=goldrank!15,
+    colframe=goldrank,
+    colbacktitle=goldrank,
+    coltitle=white,
+]
+\centering\small AI/ML\\Engineer
+\end{tcolorbox}
+\begin{tcolorbox}[
+    title={\#2},
+    colback=silverrank!15,
+    colframe=silverrank,
+    colbacktitle=silverrank,
+    coltitle=white,
+]
+\centering\small QEC\\Engineering
+\end{tcolorbox}
+\begin{tcolorbox}[
+    title={\#3},
+    colback=bronzerank!15,
+    colframe=bronzerank,
+    colbacktitle=bronzerank,
+    coltitle=white,
+]
+\centering\small QEC\\Company
+\end{tcolorbox}
+\begin{tcolorbox}[
+    title={\#4},
+    colback=ironrank!15,
+    colframe=ironrank,
+    colbacktitle=ironrank,
+    coltitle=white,
+]
+\centering\small Data\\Scientist
+\end{tcolorbox}
+\end{tcbraster}
+
+\section{Actions Towards Goals}
+
+The most important actions I can take towards my more desired outcomes is to be well versed in
+the theory and implementation of AI/ML systems. Understanding everything from neurons and KNN to
+multi-head attention and distributed training pipelines across several different architectures and services.
+I also need to be a much stronger and more confident programmer by doing things like Leetcode, side projects,
+and trying to be involved in open source as much as possible.
+
+\section{Next-Step Action}
+
+\begin{tcolorbox}[
+    title={\ding{43}\ Action Item},
+    colback=goldrank!10,
+    colframe=goldrank,
+    colbacktitle=goldrank,
+    coltitle=white,
+    fonttitle=\bfseries,
+    boxrule=0.8pt,
+    arc=4pt,
+]
+An action that I can take now or within a month is by choosing a side project, working on AI/ML fundamentals
+and programming skills. I have decided (not just for this workshop) to create my own \textbf{Streaming
+Transformer Inference Engine} to learn what it takes to take in data at a large scale and then perform
+inferences on said data to have a fraction of an understanding of what these large AI/ML companies are doing on the daily.
+\end{tcolorbox}
+
+\end{document}
