@@ -1,0 +1,334 @@
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+\documentclass[sigconf, nonacm]{acmart}
+
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+
+
+
+\renewcommand{\arraystretch}{1.15}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%% Remove ACM-specific elements for course use
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\begin{document}
+
+\title{Cross-Dataset Generalizability of Sarcasm Detection: Encoder Fine-Tuning vs.\ LLM Prompting}
+
+\author{Shiyi Liu}
+\email{lshiyi25@vt.edu}
+\affiliation{%
+  \institution{Virginia Tech}
+  \department{Department of Computer Science}
+  \city{Alexandria}
+  \country{USA}
+}
+
+\author{Christopher Williams}
+\email{cdw24@vt.edu}
+\affiliation{%
+  \institution{Virginia Tech}
+  \department{Department of Computer Science}
+  \city{Alexandria}
+  \country{USA}
+}
+
+\renewcommand{\shortauthors}{Liu and Williams}
+
+\maketitle
+
+% ============================================================
+\section{Project Idea}
+% ============================================================
+
+Sarcasm detection persists as a challenge in Natural Language Processing (NLP) due to the implied meaning, context, and speaker intent that is not explicitly communicated. Sarcasm is pervasive and a constant part of human communication, both in person and online, and failing to detect this with NLP can miss the inversion of a statement, harming downstream tasks and operations like sentiment analysis and opinion mining.
+
+Our project will investigate how well Large Language Models (LLMs) handle sarcasm detection compared to fine-tuned encoder-based transformers. Specifically, we aim to replicate the cross-dataset evaluation framework from \cite{jang2024generalizablesarcasmdetectionjust}, which fine-tunes models such as BERT and RoBERTa on multiple sarcasm datasets, and compare those results against zero-shot and few-shot prompting with LLMs such as GPT-5 and Claude Opus 4.6. This comparison directly tests whether the scale and broad pretraining of generative models can overcome the cross-dataset generalization gap that the original paper identified as a core limitation of fine-tuned approaches.
+
+% ============================================================
+\section{Motivation}
+% ============================================================
+
+Sarcasm detection is a necessary upstream task for sentiment analysis and opinion mining, and current approaches leave a clear gap between two lines of research that our project aims to bridge.
+
+Recent work by Jang and Frassinelli~\cite{jang2024generalizablesarcasmdetectionjust} demonstrated that fine-tuned encoder-based models struggle to generalize across sarcasm datasets with different styles, domains, and modalities, with cross-dataset F-scores dropping heavily from intra-dataset scores. This behavior shows that these models (BERT, RoBERTa, DeBERTa) learn dataset-specific cues rather than a general understanding of sarcasm and its cues.
+
+Separately, Zhang et al.~\cite{zhang2024sarcasmbench} benchmarked eleven LLMs on sarcasm detection and found that even GPT-4 (the strongest performer in their study) underperformed supervised fine-tuned baselines in most settings. However, their evaluation did not use the cross-dataset framework from Jang and Frassinelli, leaving open the question of whether LLMs might exhibit better \textit{generalization} across sarcasm styles, domains, and modalities.
+
+Using both fine-tuned encoders and prompted LLMs under the same cross-dataset setup, we can directly compare generalizability, seeing if the breadth of LLM pretraining compensates for the lack of task-specific fine-tuning when sarcasm shifts in appearance.
+
+% ============================================================
+\section{Datasets}
+% ============================================================
+
+We plan to use the four core datasets from Jang and Frassinelli~\cite{jang2024generalizablesarcasmdetectionjust} to enable direct comparison with their results, and include two additional datasets to broaden the range of sarcasm styles and domains evaluated. Table~\ref{tab:datasets} summarizes the datasets.
+
+\begin{table*}[t]
+\centering
+\caption{Overview of datasets used in this project.}
+\label{tab:datasets}
+\begin{tabular}{llrlll}
+\toprule
+\textbf{Dataset} & \textbf{Domain} & \textbf{Size} &
+\textbf{Labels} & \textbf{Context} & \textbf{Source} \\
+\midrule
+CSC & Simulated conversation & 7,040 & Author + Third-party &
+Yes & \cite{jang2024generalizablesarcasmdetectionjust} \\
+MUStARD & TV series dialogue & 690 & Third-party &
+Yes & \cite{mustard} \\
+SC V2 & Online debate forums & 9,386 & Third-party &
+No & \cite{sarcasmcorpusv2} \\
+iSarcasmEval & Twitter posts & 3,801 & Author &
+No & \cite{isarcasmeval} \\
+\midrule
+SARC & Reddit comments & 1.3M sarcastic & Author (/s tag) &
+Yes & \cite{khodak2018largeselfannotatedcorpussarcasm} \\
+SAD & Twitter posts & 2,340 & Manual annotation &
+No & \cite{painter2022sad} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+We add SARC because it is the largest publicly available sarcasm corpus and uses self-annotation via the \texttt{/s} tag, a labeling method discussed but not tested in the original paper~\cite{khodak2018largeselfannotatedcorpussarcasm}. SAD provides an additional Twitter-based dataset with manual annotations, offering a point of comparison against iSarcasmEval's author-labeled Twitter data. Together, the six datasets span conversational, social media, debate forum, and scripted dialogue domains, with both author and third-party labeling.
+
+% ============================================================
+\section{Examples from Dataset}
+% ============================================================
+
+Please see Table~\ref{tab:examples} for examples from our datasets.
+
+\begin{table*}[t]
+\centering
+\caption{Example sarcastic instances from each dataset.}
+\label{tab:examples}
+\small
+\begin{tabular}{p{2cm}p{13.5cm}}
+\toprule
+\textbf{Dataset} & \textbf{Example} \\
+\midrule
+CSC &
+\textbf{Context:} Steve gives you a watering can on your birthday
+while smiling at you with a strange expression. But you don't even
+have a single plant. \newline
+\textbf{Response:} Maybe I will use it as an outside shower. \\
+\midrule
+MUStARD &
+\textbf{Context:} ``How do I look?'', ``Could you be more
+specific?'', ``Can you tell I'm perspiring a little?'' \newline
+\textbf{Response:} No. The dark crescent-shaped patterns under
+your arms conceal it nicely. \\
+\midrule
+SC V2 &
+Aaahhh, so just not accomplishing our goals and going home is not
+defeat, there has to be paperwork for it to be a defeat. Gotcha. \\
+\midrule
+iSarcasmEval &
+Imagine going to university for 4 years when you could just follow
+Elon Musk on Twitter for free. \\
+\midrule
+SARC &
+\textbf{Parent:} Finally, the bankers have a voice in Washington!
+\newline
+\textbf{Comment:} Yeah, it's been really tough for them. /s \\
+\midrule
+SAD &
+Oh great, another Monday. Just what I needed. \#sarcasm \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% ============================================================
+\section{NLP Approaches}
+% ============================================================
+
+\subsection{Approach 1: Fine-Tuned Encoder Models}
+
+Following \cite{jang2024generalizablesarcasmdetectionjust}'s approach, we fine-tune three encoder-based transformers (BERT, RoBERTa, DeBERTa) for binary sarcasm classification. Each model is fine-tuned on each dataset individually using the HuggingFace Trainer API, with true 5-fold cross-validation (80/20 split, not 64/16--20 for test) and multiple random seeds. We will evaluate both intra-dataset performance (train and test on the same dataset) and cross-dataset performance (train on one, test on others). This replication serves as a baseline and allows us to verify the original paper's findings before comparing against LLM-based approaches.
+
+\subsection{Approach 2: Zero-Shot and Few-Shot LLM Prompting}
+
+We will evaluate LLMs (e.g., GPT-5, Claude Opus 4.6, Gemini 3.0, Grok 4), subject to availability and API access, on the same datasets using zero-shot and few-shot prompting. In the zero-shot setting, the model receives only a task description and the target text. In the few-shot setting, we provide 2--4 labeled examples (balanced between sarcastic and non-sarcastic) sampled from the training split of one dataset before asking the model to classify instances from the same dataset, then another round classifying instances from a different dataset. This mimics the cross-dataset setup from Approach~1, enabling direct comparison. By testing if LLMs generalize better across sarcasm styles and domains without any task-specific fine-tuning, we address the gap between the findings of~\cite{jang2024generalizablesarcasmdetectionjust} and~\cite{zhang2024sarcasmbench}.
+
+% ============================================================
+\section{Metrics}
+% ============================================================
+
+To enable direct comparison with Jang and
+Frassinelli~\cite{jang2024generalizablesarcasmdetectionjust}, we use \textbf{F1-score} as our primary evaluation metric. F1 is preferred over accuracy for this task because sarcasm datasets vary in class balance, and accuracy can be misleading when a model simply defaults to the majority class.
+
+We additionally report \textbf{precision} and \textbf{recall} separately, as they reveal distinct failure modes: low precision indicates the model over-predicts sarcasm (false positives), while low recall indicates it misses sarcastic instances (false negatives). This distinction is relevant for cross-dataset evaluation, where a model trained on debate-forum corpora (e.g., SC V2) may either over-trigger or under-trigger on subtler conversational sarcasm (e.g., CSC).
+
+For each approach, we report these metrics in two settings: \textbf{intra-dataset} (train and test on the same dataset) and \textbf{cross-dataset} (train on one dataset, test on another). The cross-dataset results will form a view similar to Table~4 in the original paper, allowing us to directly compare the generalization profiles of fine-tuned encoders and prompted LLMs. We also compute the \textbf{average cross-dataset F1} per training source as a summary measure of generalizability, following the original paper's analysis. Finally, we will conduct qualitative error analysis to better understand model behavior across datasets.
+
+
+\section{Methodology}
+
+% ============================================================
+\section{Results}
+% ============================================================
+
+\subsection{Encoders}
+
+In table~\ref{tab:encoder_results} we compare the results of all encoders on intra dataset training and testing, and then cross dataset training and testing. 
+
+%% longtable is incompatible with sigconf's two-column layout.
+%% Solution: use table* (full-width float) with plain tabular, split into two floats.
+%% landscape is still used via pdflscape to give the wide table enough horizontal room.
+
+% --- Table 3a: BERT, DeBERTa, DistilBERT ---
+\begin{table*}[htbp]
+\centering
+\caption{F1 scores for all encoder models including CSC label type (+A = author, default = third-party) and context (+C) variants. Intra F1 = train and test on the same dataset. Avg Cross F1 = mean over all valid cross-dataset transfers (same-source-corpus pairs excluded). Values rounded to two decimal places.}
+\label{tab:encoder_results_full}
+\resizebox{0.9\textwidth}{!}{
+\begin{tabular}{l|c|cccccccccc|c}
+\toprule
+Train Dataset & Intra F1 & CSC & CSC+A & CSC+A+C & CSC+C & iSarcasm & MUStARD & MUS+C & News & SARC & SarcV2 & Avg Cross F1 \\
+\midrule
+\multicolumn{13}{l}{\textbf{BERT}} \\
+CSC & 0.39 & -- & -- & -- & -- & 0.28 & 0.24 & 0.15 & 0.41 & 0.28 & 0.23 & 0.26 \\
+CSC+A & 0.96 & -- & -- & -- & -- & 0.32 & 0.51 & 0.39 & 0.56 & 0.38 & 0.34 & 0.42 \\
+CSC+A+C & 0.99 & -- & -- & -- & -- & 0.33 & 0.49 & 0.30 & 0.55 & 0.35 & 0.36 & 0.40 \\
+CSC+C & 0.33 & -- & -- & -- & -- & 0.08 & 0.16 & 0.11 & 0.15 & 0.08 & 0.14 & 0.12 \\
+iSarcasm & 0.25 & 0.17 & 0.17 & 0.00 & 0.01 & -- & 0.10 & 0.06 & 0.00 & 0.22 & 0.26 & 0.11 \\
+MUStARD & 0.61 & 0.27 & 0.30 & 0.31 & 0.30 & 0.40 & -- & -- & 0.65 & 0.61 & 0.65 & 0.44 \\
+MUS+C & 0.67 & 0.30 & 0.32 & 0.27 & 0.28 & 0.40 & -- & -- & 0.65 & 0.66 & 0.62 & 0.44 \\
+News & 0.92 & 0.13 & 0.13 & 0.00 & 0.01 & 0.22 & 0.00 & 0.00 & -- & 0.17 & 0.07 & 0.08 \\
+SARC & 0.73 & 0.30 & 0.29 & 0.28 & 0.28 & 0.42 & 0.53 & 0.43 & 0.38 & -- & 0.44 & 0.37 \\
+SarcV2 & 0.81 & 0.33 & 0.36 & 0.37 & 0.35 & 0.43 & 0.60 & 0.47 & 0.64 & 0.60 & -- & 0.46 \\
+\midrule
+\multicolumn{13}{l}{\textbf{DeBERTa}} \\
+CSC & 0.38 & -- & -- & -- & -- & 0.34 & 0.41 & 0.20 & 0.40 & 0.33 & 0.39 & 0.35 \\
+CSC+A & 0.95 & -- & -- & -- & -- & 0.40 & 0.64 & 0.47 & 0.55 & 0.42 & 0.52 & 0.50 \\
+CSC+A+C & 0.91 & -- & -- & -- & -- & 0.39 & 0.67 & 0.30 & 0.58 & 0.59 & 0.63 & 0.53 \\
+CSC+C & 0.39 & -- & -- & -- & -- & 0.41 & 0.61 & 0.30 & 0.61 & 0.57 & 0.55 & 0.51 \\
+iSarcasm & 0.43 & 0.28 & 0.31 & 0.10 & 0.09 & -- & 0.47 & 0.39 & 0.17 & 0.45 & 0.56 & 0.31 \\
+MUStARD & 0.66 & 0.30 & 0.31 & 0.31 & 0.30 & 0.40 & -- & -- & 0.65 & 0.67 & 0.67 & 0.45 \\
+MUS+C & 0.66 & 0.30 & 0.31 & 0.31 & 0.30 & 0.40 & -- & -- & 0.65 & 0.67 & 0.67 & 0.45 \\
+News & 0.93 & 0.13 & 0.15 & 0.02 & 0.01 & 0.24 & 0.16 & 0.06 & -- & 0.20 & 0.10 & 0.12 \\
+SARC & 0.75 & 0.29 & 0.30 & 0.23 & 0.24 & 0.46 & 0.57 & 0.45 & 0.39 & -- & 0.40 & 0.37 \\
+SarcV2 & 0.83 & 0.34 & 0.37 & 0.36 & 0.33 & 0.43 & 0.60 & 0.61 & 0.62 & 0.61 & -- & 0.47 \\
+\midrule
+\multicolumn{13}{l}{\textbf{DistilBERT}} \\
+CSC & 0.26 & -- & -- & -- & -- & 0.11 & 0.21 & 0.19 & 0.21 & 0.19 & 0.15 & 0.18 \\
+CSC+A & 0.98 & -- & -- & -- & -- & 0.32 & 0.46 & 0.37 & 0.60 & 0.42 & 0.38 & 0.42 \\
+CSC+A+C & 0.97 & -- & -- & -- & -- & 0.39 & 0.61 & 0.22 & 0.62 & 0.56 & 0.49 & 0.48 \\
+CSC+C & 0.38 & -- & -- & -- & -- & 0.20 & 0.29 & 0.20 & 0.37 & 0.21 & 0.21 & 0.25 \\
+iSarcasm & 0.16 & 0.16 & 0.17 & 0.01 & 0.01 & -- & 0.27 & 0.11 & 0.00 & 0.19 & 0.24 & 0.13 \\
+MUStARD & 0.48 & 0.28 & 0.31 & 0.31 & 0.30 & 0.40 & -- & -- & 0.66 & 0.60 & 0.64 & 0.44 \\
+MUS+C & 0.70 & 0.30 & 0.33 & 0.34 & 0.30 & 0.40 & -- & -- & 0.65 & 0.66 & 0.66 & 0.45 \\
+News & 0.92 & 0.10 & 0.11 & 0.04 & 0.03 & 0.20 & 0.00 & 0.00 & -- & 0.18 & 0.13 & 0.09 \\
+SARC & 0.72 & 0.29 & 0.29 & 0.27 & 0.27 & 0.36 & 0.46 & 0.44 & 0.38 & -- & 0.37 & 0.35 \\
+SarcV2 & 0.80 & 0.32 & 0.34 & 0.34 & 0.32 & 0.41 & 0.64 & 0.62 & 0.59 & 0.61 & -- & 0.47 \\
+\midrule
+\multicolumn{13}{l}{\textbf{ELECTRA}} \\
+CSC & 0.29 & -- & -- & -- & -- & 0.16 & 0.16 & 0.00 & 0.24 & 0.17 & 0.09 & 0.14 \\
+CSC+A & 0.97 & -- & -- & -- & -- & 0.36 & 0.60 & 0.31 & 0.59 & 0.42 & 0.52 & 0.47 \\
+CSC+A+C & 0.96 & -- & -- & -- & -- & 0.31 & 0.51 & 0.31 & 0.43 & 0.42 & 0.47 & 0.41 \\
+CSC+C & 0.14 & -- & -- & -- & -- & 0.02 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.01 \\
+iSarcasm & 0.35 & 0.23 & 0.23 & 0.02 & 0.02 & -- & 0.43 & 0.39 & 0.01 & 0.23 & 0.43 & 0.22 \\
+MUStARD & 0.56 & 0.29 & 0.30 & 0.33 & 0.32 & 0.41 & -- & -- & 0.65 & 0.61 & 0.68 & 0.45 \\
+MUS+C & 0.63 & 0.30 & 0.32 & 0.32 & 0.30 & 0.40 & -- & -- & 0.65 & 0.66 & 0.64 & 0.45 \\
+News & 0.94 & 0.09 & 0.07 & 0.01 & 0.01 & 0.26 & 0.06 & 0.10 & -- & 0.12 & 0.07 & 0.09 \\
+SARC & 0.74 & 0.28 & 0.29 & 0.20 & 0.18 & 0.44 & 0.52 & 0.32 & 0.41 & -- & 0.46 & 0.35 \\
+SarcV2 & 0.82 & 0.34 & 0.36 & 0.35 & 0.34 & 0.46 & 0.66 & 0.62 & 0.58 & 0.62 & -- & 0.48 \\
+\midrule
+\multicolumn{13}{l}{\textbf{RoBERTa}} \\
+CSC & 0.08 & -- & -- & -- & -- & 0.04 & 0.00 & 0.00 & 0.00 & 0.06 & 0.01 & 0.02 \\
+CSC+A & 0.45 & -- & -- & -- & -- & 0.36 & 0.05 & 0.29 & 0.24 & 0.36 & 0.38 & 0.28 \\
+CSC+A+C & 0.00 & -- & -- & -- & -- & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+CSC+C & 0.00 & -- & -- & -- & -- & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+iSarcasm & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & -- & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+MUStARD & 0.41 & 0.20 & 0.22 & 0.32 & 0.31 & 0.37 & -- & -- & 0.62 & 0.43 & 0.64 & 0.39 \\
+MUS+C & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & 0.00 & -- & -- & 0.00 & 0.00 & 0.00 & 0.00 \\
+News & 0.71 & 0.09 & 0.11 & 0.24 & 0.23 & 0.21 & 0.06 & 0.16 & -- & 0.18 & 0.30 & 0.18 \\
+SARC & 0.64 & 0.27 & 0.28 & 0.10 & 0.08 & 0.34 & 0.52 & 0.29 & 0.41 & -- & 0.32 & 0.29 \\
+SarcV2 & 0.68 & 0.30 & 0.31 & 0.31 & 0.30 & 0.39 & 0.63 & 0.64 & 0.56 & 0.66 & -- & 0.46 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\subsection{LLMs}
+
+\begin{table*}[htbp]
+\centering
+\caption{F1 scores for LLM prompting models. Intra F1 refers to performance when the train and test datasets match. Avg Cross F1 is the average across all non-matching datasets.}
+\label{tab:llm_results}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l|c|ccccccc}
+\toprule
+Train Dataset & Intra F1 & CSC & iSarcasm & MUStARD & News & SARC & SarcV2 & Avg Cross F1 \\
+\midrule
+
+\multicolumn{9}{l}{\textbf{GPT (Zero-shot)}} \\
+CSC       & 0.20 & -- & 0.45 & 0.73 & 0.74 & 0.66 & 0.78 & \textbf{0.67} \\
+iSarcasm  & 0.48 & 0.10 & -- & 0.75 & 0.71 & 0.00 & 0.00 & 0.31 \\
+MUStARD   & 0.73 & 0.00 & 0.48 & -- & 0.73 & 0.62 & 0.77 & 0.52 \\
+News      & 0.76 & 0.11 & 0.48 & 0.75 & -- & 0.61 & 0.00 & 0.39 \\
+SARC      & 0.64 & 0.00 & 0.38 & 0.75 & 0.65 & -- & 0.77 & 0.51 \\
+SarcV2    & 0.73 & 0.12 & 0.53 & 0.68 & 0.68 & 0.62 & -- & 0.53 \\
+
+\midrule
+\multicolumn{9}{l}{\textbf{GPT (Few-shot)}} \\
+CSC       & 0.25 & -- & 0.50 & 0.75 & 0.68 & 0.66 & 0.81 & \textbf{0.68} \\
+iSarcasm  & 0.43 & 0.22 & -- & 0.60 & 0.74 & 0.00 & 0.00 & 0.31 \\
+MUStARD   & 0.68 & 0.18 & 0.50 & -- & 0.62 & 0.55 & 0.80 & 0.53 \\
+News      & 0.81 & 0.11 & 0.48 & 0.67 & -- & 0.58 & 0.00 & 0.37 \\
+SARC      & 0.62 & 0.00 & 0.35 & 0.72 & 0.56 & -- & 0.76 & 0.48 \\
+SarcV2    & 0.78 & 0.14 & 0.43 & 0.58 & 0.51 & 0.60 & -- & 0.45 \\
+
+\midrule
+\multicolumn{9}{l}{\textbf{Kimi-K2.6 (Zero-shot)}} \\
+CSC       & 0.21 & -- & 0.55 & 0.82 & 0.89 & 0.72 & 0.81 & \textbf{0.76} \\
+iSarcasm  & 0.40 & 0.11 & -- & 0.76 & 0.88 & 0.74 & 0.85 & 0.67 \\
+MUStARD   & 0.79 & 0.10 & 0.50 & -- & 0.89 & 0.72 & 0.80 & 0.60 \\
+News      & 0.88 & 0.18 & 0.45 & 0.74 & -- & 0.71 & 0.80 & 0.58 \\
+SARC      & 0.74 & 0.22 & 0.52 & 0.84 & 0.92 & -- & 0.77 & 0.65 \\
+SarcV2    & 0.79 & 0.22 & 0.50 & 0.79 & 0.85 & 0.70 & -- & 0.61 \\
+
+\midrule
+\multicolumn{9}{l}{\textbf{Kimi-K2.6 (Few-shot)}} \\
+CSC       & 0.08 & -- & 0.45 & 0.81 & 0.86 & 0.70 & 0.87 & \textbf{0.74} \\
+iSarcasm  & 0.45 & 0.25 & -- & 0.79 & 0.85 & 0.74 & 0.81 & 0.69 \\
+MUStARD   & 0.74 & 0.21 & 0.58 & -- & 0.86 & 0.69 & 0.87 & 0.64 \\
+News      & 0.88 & 0.11 & 0.48 & 0.72 & -- & 0.70 & 0.84 & 0.57 \\
+SARC      & 0.74 & 0.09 & 0.48 & 0.81 & 0.77 & -- & 0.78 & 0.59 \\
+SarcV2    & 0.84 & 0.11 & 0.59 & 0.75 & 0.85 & 0.69 & -- & 0.60 \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+
+
+
+
+\FloatBarrier 
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
